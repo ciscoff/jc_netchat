@@ -17,9 +17,9 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(getClass().getResource("../messenger/ChatGui.fxml"));
 
-        //primaryStage.initStyle(StageStyle.UNDECORATED);
+//        primaryStage.initStyle(StageStyle.UNDECORATED);
+//        primaryStage.setTitle("Geekbrains chat");
         primaryStage.initStyle(StageStyle.TRANSPARENT);
-        primaryStage.setTitle("Geekbrains chat");
         primaryStage.setScene(new Scene(root, FrameWidth, FrameHeight));
         primaryStage.show();
     }
