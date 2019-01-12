@@ -1,0 +1,124 @@
+#mainFrame {
+    -fx-background-color: #2f4f4f;
+    -fx-padding: 15;
+    -fx-spacing: 10;
+}
+
+#chatArea {
+    -fx-border-color: transparent;
+    -fx-background-color: white;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 10;
+    -fx-spacing: 10;
+}
+
+#closeArea {
+    -fx-spacing: 10;
+}
+
+#chatField {
+    -fx-border-color: transparent;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-border-width: 0px;
+}
+
+#messageArea {
+    -fx-background-color: white;
+    -fx-border-color: transparent;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-padding: 10;
+    -fx-spacing: 10;
+}
+
+#messageField {
+    -fx-border-color: transparent;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-inner-border: transparent;
+    -fx-border-width: 0px;
+    -fx-font-size: 10pt;
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-min-height: 42;
+    -fx-max-height: 42;
+}
+
+#messageField:focused {
+    -fx-border-color: transparent;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-border-width: 0px;
+    -fx-font-size: 10pt;
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-pref-height: 42px;
+    -fx-pref-width: 42px;
+    -fx-min-height: 42;
+    -fx-max-height: 42;
+}
+
+#btnSend {
+    -fx-background-image: url("/img/send32x32.png");
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center center;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-background-radius: 0;
+    -fx-background-color: transparent;
+    -fx-pref-height: 32px;
+    -fx-pref-width: 32px;
+    -fx-max-height: 32px;
+    -fx-max-width: 32px;
+}
+
+#btnSend:focused {
+    -fx-border-color: transparent;
+    -fx-border-style: solid, segments(1, 2);
+}
+
+#btnSend:pressed {
+    -fx-background-image: url("/img/send16x16.png");
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center center;
+    -fx-background-color: white;
+    -fx-text-fill: white;
+    -fx-pref-height: 32px;
+    -fx-pref-width: 32px;
+    -fx-max-height: 32px;
+    -fx-max-width: 32px;
+}
+
+#btnHide {
+    -fx-background-image: url("/img/hide.png");
+    -fx-background-repeat: no-repeat;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+#btnClose {
+    -fx-background-image: url("/img/close1.png");
+    -fx-background-repeat: no-repeat;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+#btnClose:pressed {
+    -fx-background-image: url("/img/close1.png");
+    -fx-background-repeat: no-repeat;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+.separator{
+    -fx-background-color: #2f4f4f;
+    -fx-background-radius: 1;
+}
+
+.scroll-bar:vertical .thumb {
+    -fx-background-color: #2f4f4f;
+    -fx-background-radius: 5em;
+}
