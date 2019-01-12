@@ -12,7 +12,6 @@ public class Main extends Application {
     private final int FrameWidth = 450;
     private final int FrameHeight = 600;
 
-
     @Override
     public void start(Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(getClass().getResource("../messenger/ChatGui.fxml"));
