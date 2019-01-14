@@ -13,6 +13,16 @@
     -fx-spacing: 10;
 }
 
+#chatScroll {
+    -fx-border-color: transparent;
+    -fx-background-color: white;
+}
+
+#chatMessages {
+    -fx-border-color: white;
+    -fx-background-color: white;
+}
+
 #closeArea {
     -fx-spacing: 10;
 }
