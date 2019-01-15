@@ -38,7 +38,7 @@ public class Controller {
 
     @FXML
     public void sendMessage() throws Exception {
-        String iconPath = "D:\\aps\\GeekBrains\\quarter1\\jc_chat\\src\\img\\";
+        String iconPath = "file:icons/";
 
         // Элементы отображения сообщения
         HBox hb = new HBox();
@@ -51,11 +51,13 @@ public class Controller {
         String fx_alignment_hb = "-fx-alignment:";
 
         if(alignmentSend) {
+            //iconPath += "chatS.png";
             iconPath += "chatS.png";
             fx_background_msg += "#efe4b0   ;";
             fx_alignment_hb += (Pos.CENTER_LEFT + ";");
         }
         else {
+            //iconPath += "chatR.png";
             iconPath += "chatR.png";
             fx_background_msg += "#d2d2d2;";
             fx_alignment_hb += (Pos.CENTER_RIGHT + ";");
@@ -74,8 +76,7 @@ public class Controller {
                 "-fx-border-radius: 5;");
 
         // Добавить картинку
-        FileInputStream input = new FileInputStream(iconPath);
-        image = new Image(input);
+        image = new Image(iconPath);
         imageView = new ImageView(image);
 
         if(alignmentSend)
@@ -104,5 +105,4 @@ public class Controller {
         Stage stage = (Stage) btnHide.getScene().getWindow();
         stage.setIconified(true);
     }
-
 }
