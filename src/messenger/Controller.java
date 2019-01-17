@@ -10,13 +10,18 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.io.File;
+import java.io.FileInputStream;
+
 public class Controller {
-    private boolean alignment = true;
+    private boolean alignmentSend = true;
 
     @FXML
     Button btnSend;
@@ -32,23 +37,54 @@ public class Controller {
     ScrollPane chatScroll;
 
     @FXML
-    public void sendMessage() {
-        // Формируем контейнер для сообщения
-        Label message = new Label(messageField.getText());
-        message.setStyle("-fx-background-color: #2f4f4f;" +
-                "-fx-background-radius: 10;" +
-                "-fx-border-radius: 10;");
+    public void sendMessage() throws Exception {
+        String iconPath = "file:icons/";
 
+        // Элементы отображения сообщения
         HBox hb = new HBox();
+        Label message = new Label(messageField.getText());
+        ImageView imageView;
+        Image image;
 
-        hb.setStyle("-fx-padding: 0;" +
+        // Стилевое оформление
+        String fx_background_msg = "-fx-background-color: ";
+        String fx_alignment_hb = "-fx-alignment:";
+
+        if(alignmentSend) {
+            //iconPath += "chatS.png";
+            iconPath += "chatS.png";
+            fx_background_msg += "#efe4b0   ;";
+            fx_alignment_hb += (Pos.CENTER_LEFT + ";");
+        }
+        else {
+            //iconPath += "chatR.png";
+            iconPath += "chatR.png";
+            fx_background_msg += "#d2d2d2;";
+            fx_alignment_hb += (Pos.CENTER_RIGHT + ";");
+        }
+
+        hb.setStyle("-fx-padding: 10;" +
                 "-fx-border-color: transparent;" +
                 "-fx-background-color: white;" +
                 "-fx-border-width: 0px;" +
-                "-fx-alignment: " + (alignment ? Pos.CENTER_LEFT : Pos.CENTER_RIGHT) + ";" +
-                "-fx-spacing: 5;");
-        alignment = !alignment;
-        hb.getChildren().add(message);
+                fx_alignment_hb +
+                "-fx-spacing: 30;");
+
+        message.setStyle(fx_background_msg +
+                "-fx-background-radius: 5;" +
+                "-fx-padding: 10 30 10 30;" +
+                "-fx-border-radius: 5;");
+
+        // Добавить картинку
+        image = new Image(iconPath);
+        imageView = new ImageView(image);
+
+        if(alignmentSend)
+            hb.getChildren().addAll(imageView, message);
+        else
+            hb.getChildren().addAll(message, imageView);
+
+        alignmentSend = !alignmentSend;
         HBox.setHgrow(message, Priority.ALWAYS);
 
         // Добавляем контейнер сообщения в скроллинг
@@ -59,7 +95,6 @@ public class Controller {
         messageField.requestFocus();
     }
 
-
     @FXML
     public void closeWindow() {
         Platform.exit();
@@ -69,6 +104,5 @@ public class Controller {
     void minimizeWindow() {
         Stage stage = (Stage) btnHide.getScene().getWindow();
         stage.setIconified(true);
-
     }
 }
