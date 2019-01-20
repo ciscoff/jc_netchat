@@ -8,6 +8,7 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.ScrollPane?>
 
 <VBox fx:controller="messenger.Controller"
       xmlns:fx="http://javafx.com/fxml"
@@ -39,7 +40,9 @@
             </image>
         </ImageView>
         <Separator orientation="HORIZONTAL"/>
-        <TextArea fx:id="chatField" editable="false" VBox.vgrow="ALWAYS" />
+        <ScrollPane fx:id="chatScroll" fitToWidth="true" fitToHeight="true" VBox.vgrow="ALWAYS">
+            <VBox fx:id="chatMessages" VBox.vgrow="ALWAYS"></VBox>
+        </ScrollPane>
     </VBox>
     <HBox id="messageArea" HBox.hgrow="ALWAYS">
         <TextField fx:id="messageField" HBox.hgrow="ALWAYS" promptText="Введите сообщение..." onAction="#sendMessage"/>
