@@ -17,7 +17,7 @@ public class ClientHandler {
     private DataOutputStream os = null;
     private boolean active = true;
 
-    public ClientHandler(ChatServer server, Socket socket) {
+    public ClientHandler(ChatServer server, Socket socket, String color) {
         try {
             this.server = server;
             this.socket = socket;
@@ -33,14 +33,15 @@ public class ClientHandler {
                             if(message.equals("/end")) {
                                 sendMessage("Goodbye");
                                 active = false;
-                                break;
+                                throw new IOException();
                             }
-                            server.broadcastMessage(message);
-                            System.out.print(message + System.lineSeparator());
+                            server.broadcastMessage(color+message);
+                            System.out.print("[" + currentTime() + ": " + clientId(socket) + "]: " + message + System.lineSeparator());
                         }
 
                     } catch (IOException e) {
                         System.out.println("Client " + clientId(socket) + " disconnected");
+                        server.removeClient(clientId(socket));
                     } finally {
                         closeResources(is, os, socket);
                     }

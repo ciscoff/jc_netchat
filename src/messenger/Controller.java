@@ -79,31 +79,39 @@ public class Controller implements Initializable {
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
 
-            new Thread(new Runnable() {
+            Thread receiver = new Thread(new Runnable() {
                 @Override
                 public void run() {
+
                     try {
                         while (true) {
-                            String str = in.readUTF();
+                            final String str = in.readUTF();
                             if(str.equals("/serverClosed")) break;
+
+                            String color = str.substring(0, colors[0].length());
+                            str.substring(colors[0].length());
 
                             // Чтобы избежать ошибки
                             // "Not on FX application thread"
                             Platform.runLater(new Runnable() {
                                 @Override
                                 public void run() {
-                                    stickMessage(conversation, str);
+                                    stickMessage(conversation,
+                                            str.substring(colors[0].length()),
+                                            str.substring(0, colors[0].length()));
                                 }
                             });
                             conversation = !conversation;
                         }
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        System.out.println("Connection closed");
                     } finally {
                         closeResources(in, out, socket);
                     }
                 }
-            }).start();
+            });
+            receiver.setDaemon(true);
+            receiver.start();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -115,7 +123,7 @@ public class Controller implements Initializable {
      *
      * @param isMine
      */
-    private void stickMessage(boolean isMine, String text) {
+    private void stickMessage(boolean isMine, String text, String color) {
         // Элементы отображения сообщения
         HBox hb = new HBox();
         Label message = new Label(text);
@@ -125,10 +133,10 @@ public class Controller implements Initializable {
         String fx_alignment_hb = "-fx-alignment:";
 
         if (isMine) {
-            fx_background_msg += "#efe4b0;";
+            fx_background_msg += color;
             fx_alignment_hb += (Pos.CENTER_LEFT + ";");
         } else {
-            fx_background_msg += "#d2d2d2;";
+            fx_background_msg += color;
             fx_alignment_hb += (Pos.CENTER_RIGHT + ";");
         }
 
