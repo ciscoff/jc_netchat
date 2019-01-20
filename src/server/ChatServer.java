@@ -13,9 +13,7 @@ public class ChatServer {
     Hashtable<String, ClientHandler> clients =  new Hashtable<>();
 //        Vector<ClientHandler> clients = new Vector<>();
 
-
     public void start(){
-
 
         ServerSocket serverSocket = null;
         Socket client = null;

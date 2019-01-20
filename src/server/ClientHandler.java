@@ -36,6 +36,7 @@ public class ClientHandler {
                                 break;
                             }
                             server.broadcastMessage(message);
+                            System.out.print(message + System.lineSeparator());
                         }
 
                     } catch (IOException e) {

@@ -8,6 +8,7 @@ package messenger;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -17,12 +18,20 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.*;
+import java.net.Socket;
+import java.net.URL;
+import java.util.ResourceBundle;
 
-public class Controller {
+import static utils.Share.*;
+
+public class Controller implements Initializable {
 
     boolean conversation = true;
+
+    Socket socket;
+    DataInputStream in;
+    DataOutputStream out;
 
     @FXML
     Button btnSend;
@@ -39,8 +48,16 @@ public class Controller {
 
     @FXML
     public void sendMessage() {
-        stickMessage(conversation);
-        conversation = !conversation;
+//        stickMessage(conversation);
+//        conversation = !conversation;
+
+        try {
+            out.writeUTF(messageField.getText());
+            messageField.clear();
+            messageField.requestFocus();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -55,16 +72,53 @@ public class Controller {
         stage.setIconified(true);
     }
 
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        try {
+            socket = new Socket(HOST, PORT);
+            in = new DataInputStream(socket.getInputStream());
+            out = new DataOutputStream(socket.getOutputStream());
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        while (true) {
+                            String str = in.readUTF();
+                            if(str.equals("/serverClosed")) break;
+
+                            // Чтобы избежать ошибки
+                            // "Not on FX application thread"
+                            Platform.runLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    stickMessage(conversation, str);
+                                }
+                            });
+                            conversation = !conversation;
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } finally {
+                        closeResources(in, out, socket);
+                    }
+                }
+            }).start();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      * Отобразить сообщение
      *
      * @param isMine
      */
-    private void stickMessage(boolean isMine) {
+    private void stickMessage(boolean isMine, String text) {
         // Элементы отображения сообщения
         HBox hb = new HBox();
-        Label message = new Label(messageField.getText());
+        Label message = new Label(text);
 
         // Стилевое оформление
         String fx_background_msg = "-fx-background-color: ";
