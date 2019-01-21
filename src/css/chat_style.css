@@ -104,6 +104,15 @@
     -fx-max-width: 32px;
 }
 
+#btnAuth {
+    -fx-background-color: #2f4f4f;
+    -fx-text-fill: white;
+}
+
+#btnAuth:hover {
+    -fx-background-color: #2f8f4f;
+}
+
 #btnHide {
     -fx-background-image: url("/img/hide.png");
     -fx-background-repeat: no-repeat;

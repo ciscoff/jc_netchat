@@ -93,6 +93,10 @@ public class Controller {
         try {
             out.writeUTF(PROT_MSG_AUTH + " " + loginField.getText() + " " + passwordField.getText());
 
+            /**
+             * Нужно добавить обработку ситуации отправки пустой формы !!!
+             */
+
             authReply.setVisible(false);
             loginField.clear();
             passwordField.clear();
@@ -144,6 +148,8 @@ public class Controller {
                             if (str.equals(PROT_MSG_SERVER_CLOSED)) break;
 
                             String[] parts = str.split(SEPARATOR);
+
+                            System.out.println(socket.getInetAddress() + ":" + socket.getPort());
 
                             // Чтобы избежать ошибки
                             // "Not on FX application thread"
