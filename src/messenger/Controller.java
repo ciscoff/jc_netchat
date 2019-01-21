@@ -88,7 +88,7 @@ public class Controller {
 
     @FXML
     public void tryToAuth() {
-        if(socket == null || socket.isClosed()) connect();
+        if (socket == null || socket.isClosed()) connect();
 
         try {
             out.writeUTF(PROT_MSG_AUTH + " " + loginField.getText() + " " + passwordField.getText());
@@ -119,7 +119,7 @@ public class Controller {
                         while (true) {
                             String str = in.readUTF();
 
-                            if(str.startsWith(PROT_MSG_AUTH_OK)) {
+                            if (str.startsWith(PROT_MSG_AUTH_OK)) {
                                 String[] parts = str.split(SEPARATOR);
                                 nickname = parts[1];
 
@@ -141,7 +141,7 @@ public class Controller {
                         while (true) {
                             String str = in.readUTF();
 
-                            if(str.equals(PROT_MSG_SERVER_CLOSED)) break;
+                            if (str.equals(PROT_MSG_SERVER_CLOSED)) break;
 
                             String[] parts = str.split(SEPARATOR);
 
@@ -150,7 +150,7 @@ public class Controller {
                             Platform.runLater(new Runnable() {
                                 @Override
                                 public void run() {
-                                    stickMessage(parts[0].equals(nickname), parts[1], parts[2]);
+                                    stickMessage(parts[0].equals(nickname), parts[1], parts[0], parts[2]);
                                 }
                             });
                         }
@@ -171,24 +171,20 @@ public class Controller {
 
     /**
      * Отобразить сообщение
-     *
      */
-    private void stickMessage(boolean isMine, String color, String text) {
+    private void stickMessage(boolean isMine, String color, String nick, String text) {
         // Элементы отображения сообщения
         HBox hb = new HBox();
+        VBox vb = new VBox();
+        Label nickname = new Label(nick);
         Label message = new Label(text);
 
         // Стилевое оформление
-        String fx_background_msg = "-fx-background-color: ";
-        String fx_alignment_hb = "-fx-alignment:";
+        String fx_bg_conntent = "-fx-background-color: " + color;
+        String fx_alignment_hb = "-fx-alignment: ";
 
-        if (isMine) {
-            fx_background_msg += color;
-            fx_alignment_hb += (Pos.CENTER_LEFT + ";");
-        } else {
-            fx_background_msg += color;
-            fx_alignment_hb += (Pos.CENTER_RIGHT + ";");
-        }
+        // Свои сообщения по левой стороне окна. Чужие по правой
+        fx_alignment_hb += (isMine) ? (Pos.CENTER_LEFT + ";") : (Pos.CENTER_RIGHT + ";");
 
         hb.setStyle("-fx-padding: 10;" +
                 "-fx-border-color: transparent;" +
@@ -197,16 +193,31 @@ public class Controller {
                 fx_alignment_hb +
                 "-fx-spacing: 30;");
 
-        message.setStyle(fx_background_msg +
+        vb.setStyle(fx_bg_conntent +
                 "-fx-background-radius: 5;" +
-                "-fx-padding: 10 30 10 30;" +
-                "-fx-border-radius: 5;");
+                "-fx-border-radius: 5;" +
+                "-fx-spacing: 5;");
 
+        nickname.setStyle("-fx-font-style: italic;" +
+                "-fx-font-weight: bold;" +
+                "-fx-alignment: baseline-left;" +
+                "-fx-padding: 5 20 2 5;");
+
+        message.setStyle("-fx-alignment: baseline-right;" +
+                "-fx-padding: 0 5 5 20;");
+
+
+//        message.setStyle(fx_background_msg +
+//                "-fx-background-radius: 5;" +
+//                "-fx-padding: 10 30 10 30;" +
+//                "-fx-border-radius: 5;");
+
+        vb.getChildren().addAll(nickname, message);
 
         if (isMine)
-            hb.getChildren().addAll(prepareSticker(fx_background_msg), message);
+            hb.getChildren().addAll(prepareSticker(fx_bg_conntent), vb);
         else
-            hb.getChildren().addAll(message, prepareSticker(fx_background_msg));
+            hb.getChildren().addAll(vb, prepareSticker(fx_bg_conntent));
 
         HBox.setHgrow(message, Priority.ALWAYS);
 

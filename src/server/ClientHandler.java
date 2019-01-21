@@ -59,7 +59,7 @@ public class ClientHandler {
                                 active = false;
                                 break;
                             }
-                            server.broadcastMessage(color+message);
+                            server.broadcastMessage(nickname + SEPARATOR + color + SEPARATOR + message);
                             System.out.print("[" + currentTime() + ": " + nickname + "]: " + message + System.lineSeparator());
                         }
 
