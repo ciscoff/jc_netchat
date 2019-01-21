@@ -193,29 +193,30 @@ public class Controller {
                 "-fx-spacing: 30;" +
                 fx_alignment_hb);
 
-        vb.setStyle(fx_bg_content +
-                "-fx-background-radius: 5;" +
+        vb.setStyle("-fx-background-radius: 5;" +
                 "-fx-border-radius: 5;" +
-                "-fx-spacing: 5;");
+                "-fx-spacing: 2;" +
+                fx_bg_content);
 
         nickname.setStyle("-fx-font-style: italic;" +
                 "-fx-font-weight: bold;" +
                 "-fx-alignment: baseline-left;" +
                 "-fx-padding: 5 30 0 10;" +
+                "-fx-font-size: 16px;" +
                 "-fx-text-fill: white;");
 
         message.setStyle("-fx-alignment: baseline-right;" +
                 "-fx-padding: 0 10 5 30;" +
+                "-fx-font-size: 14px;" +
                 "-fx-alignment: baseline-right;");
 
         vb.getChildren().addAll(nickname, message);
 
+        // Добавить иконку конверта справа или слева
         if (isMine)
             hbPanel.getChildren().addAll(prepareSticker(fx_bg_content), vb);
         else
             hbPanel.getChildren().addAll(vb, prepareSticker(fx_bg_content));
-
-        //HBox.setHgrow(vb, Priority.ALWAYS);
 
         // Добавляем контейнер сообщения в скроллинг
         chatMessages.getChildren().add(hbPanel);
@@ -255,5 +256,4 @@ public class Controller {
         messageArea.setVisible(isAuthorized);
         messageArea.setManaged(isAuthorized);
     }
-
 }
