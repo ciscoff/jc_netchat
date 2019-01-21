@@ -174,26 +174,26 @@ public class Controller {
      */
     private void stickMessage(boolean isMine, String color, String nick, String text) {
         // Элементы отображения сообщения
-        HBox hb = new HBox();
+        HBox hbPanel = new HBox();
         VBox vb = new VBox();
         Label nickname = new Label(nick);
         Label message = new Label(text);
 
         // Стилевое оформление
-        String fx_bg_conntent = "-fx-background-color: " + color;
+        String fx_bg_content = "-fx-background-color: " + color;
         String fx_alignment_hb = "-fx-alignment: ";
 
         // Свои сообщения по левой стороне окна. Чужие по правой
         fx_alignment_hb += (isMine) ? (Pos.CENTER_LEFT + ";") : (Pos.CENTER_RIGHT + ";");
 
-        hb.setStyle("-fx-padding: 10;" +
+        hbPanel.setStyle("-fx-padding: 10;" +
                 "-fx-border-color: transparent;" +
                 "-fx-background-color: white;" +
                 "-fx-border-width: 0px;" +
-                fx_alignment_hb +
-                "-fx-spacing: 30;");
+                "-fx-spacing: 30;" +
+                fx_alignment_hb);
 
-        vb.setStyle(fx_bg_conntent +
+        vb.setStyle(fx_bg_content +
                 "-fx-background-radius: 5;" +
                 "-fx-border-radius: 5;" +
                 "-fx-spacing: 5;");
@@ -201,28 +201,24 @@ public class Controller {
         nickname.setStyle("-fx-font-style: italic;" +
                 "-fx-font-weight: bold;" +
                 "-fx-alignment: baseline-left;" +
-                "-fx-padding: 5 20 2 5;");
+                "-fx-padding: 5 30 0 10;" +
+                "-fx-text-fill: white;");
 
         message.setStyle("-fx-alignment: baseline-right;" +
-                "-fx-padding: 0 5 5 20;");
-
-
-//        message.setStyle(fx_background_msg +
-//                "-fx-background-radius: 5;" +
-//                "-fx-padding: 10 30 10 30;" +
-//                "-fx-border-radius: 5;");
+                "-fx-padding: 0 10 5 30;" +
+                "-fx-alignment: baseline-right;");
 
         vb.getChildren().addAll(nickname, message);
 
         if (isMine)
-            hb.getChildren().addAll(prepareSticker(fx_bg_conntent), vb);
+            hbPanel.getChildren().addAll(prepareSticker(fx_bg_content), vb);
         else
-            hb.getChildren().addAll(vb, prepareSticker(fx_bg_conntent));
+            hbPanel.getChildren().addAll(vb, prepareSticker(fx_bg_content));
 
-        HBox.setHgrow(message, Priority.ALWAYS);
+        //HBox.setHgrow(vb, Priority.ALWAYS);
 
         // Добавляем контейнер сообщения в скроллинг
-        chatMessages.getChildren().add(hb);
+        chatMessages.getChildren().add(hbPanel);
         chatScroll.setVvalue(1.0);
 
         messageField.clear();
@@ -238,12 +234,14 @@ public class Controller {
 
         HBox iconHb = new HBox();
         iconHb.setStyle("-fx-padding: 10;" +
-                backgroundColor +
+                "-fx-alignment:  baseline-center;" +
                 "-fx-border-width: 0px;" +
                 "-fx-border-radius: 50%;" +
-                "-fx-background-radius: 50%");
-        iconHb.getChildren().add(imageView);
+                "-fx-background-radius: 50%;" +
+                backgroundColor);
+        iconHb.setMaxSize(40, 40);
 
+        iconHb.getChildren().add(imageView);
         return iconHb;
     }
 
