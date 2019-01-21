@@ -4,6 +4,11 @@
     -fx-spacing: 10;
 }
 
+#authPanel {
+    -fx-padding: 0 70 0 70;
+    -fx-spacing: 10;
+}
+
 #chatArea {
     -fx-border-color: transparent;
     -fx-background-color: white;

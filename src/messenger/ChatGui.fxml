@@ -10,6 +10,8 @@
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.ScrollPane?>
 
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Label?>
 <VBox fx:controller="messenger.Controller"
       xmlns:fx="http://javafx.com/fxml"
       stylesheets = "/css/chat_style.css"
@@ -34,17 +36,32 @@
         </HBox.margin>
     </HBox>
     <VBox fx:id="chatArea" VBox.vgrow="ALWAYS">
+
+        <VBox spacing="10">
         <ImageView fx:id="imageView" layoutX="5.0" layoutY="5.0" fitHeight="40.0" fitWidth="230.0" pickOnBounds="true" preserveRatio="true">
             <image>
                 <Image url="/img/gb.png" />
             </image>
         </ImageView>
         <Separator orientation="HORIZONTAL"/>
+        </VBox>
+
+        <VBox fx:id="scrollPanel" visible="false" managed="false">
         <ScrollPane fx:id="chatScroll" fitToWidth="true" fitToHeight="true" VBox.vgrow="ALWAYS">
             <VBox fx:id="chatMessages" VBox.vgrow="ALWAYS"></VBox>
         </ScrollPane>
+        </VBox>
+
+        <VBox fx:id="authPanel" VBox.vgrow="ALWAYS" alignment="CENTER">
+            <TextField promptText="Login" fx:id="loginField"/>
+            <PasswordField promptText="Password" fx:id="passwordField" onAction="#tryToAuth"/>
+            <Button text="Sign In" onAction="#tryToAuth" alignment="CENTER"/>
+            <Label fx:id="authReply" text="" textFill="brown" style="-fx-font-style: italic; -fx-font-weight: bold" visible="false"/>
+        </VBox>
+
     </VBox>
-    <HBox id="messageArea" HBox.hgrow="ALWAYS">
+
+    <HBox fx:id="messageArea" HBox.hgrow="ALWAYS" visible="false" managed="false">
         <TextField fx:id="messageField" HBox.hgrow="ALWAYS" promptText="Введите сообщение..." onAction="#sendMessage"/>
         <Button fx:id="btnSend" onAction="#sendMessage">
             <HBox.margin>

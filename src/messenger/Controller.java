@@ -17,6 +17,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import server.ClientHandler;
 
 import java.io.*;
 import java.net.Socket;
@@ -25,13 +26,13 @@ import java.util.ResourceBundle;
 
 import static utils.Share.*;
 
-public class Controller implements Initializable {
+public class Controller {
 
-    boolean conversation = true;
-
-    Socket socket;
+    boolean isAuthorized;
     DataInputStream in;
     DataOutputStream out;
+    Socket socket;
+
 
     @FXML
     Button btnSend;
@@ -45,6 +46,20 @@ public class Controller implements Initializable {
     VBox chatMessages;
     @FXML
     ScrollPane chatScroll;
+    @FXML
+    VBox authPanel;
+    @FXML
+    TextField loginField;
+    @FXML
+    PasswordField passwordField;
+    @FXML
+    VBox chatArea;
+    @FXML
+    VBox scrollPanel;
+    @FXML
+    HBox messageArea;
+    @FXML
+    Label authReply;
 
     @FXML
     public void sendMessage() {
@@ -58,7 +73,6 @@ public class Controller implements Initializable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     @FXML
@@ -72,8 +86,22 @@ public class Controller implements Initializable {
         stage.setIconified(true);
     }
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    @FXML
+    public void tryToAuth() {
+        if(socket == null || socket.isClosed()) connect();
+
+        try {
+            out.writeUTF(PROT_MSG_AUTH + " " + loginField.getText() + " " + passwordField.getText());
+
+            authReply.setVisible(false);
+            loginField.clear();
+            passwordField.clear();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void connect() {
         try {
             socket = new Socket(HOST, PORT);
             in = new DataInputStream(socket.getInputStream());
@@ -83,25 +111,48 @@ public class Controller implements Initializable {
                 @Override
                 public void run() {
 
-                    try {
-                        while (true) {
-                            final String str = in.readUTF();
-                            if(str.equals("/serverClosed")) break;
+                    String nickname;
 
-                            String color = str.substring(0, colors[0].length());
-                            str.substring(colors[0].length());
+                    try {
+
+                        // Цикл авторизации
+                        while (true) {
+                            String str = in.readUTF();
+
+                            if(str.startsWith(PROT_MSG_AUTH_OK)) {
+                                String[] parts = str.split(SEPARATOR);
+                                nickname = parts[1];
+
+                                setAuthorized(true);
+                                break;
+                            } else {
+                                Platform.runLater(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        authReply.setText(str);
+                                        authReply.setVisible(true);
+                                    }
+                                });
+                            }
+                        }
+
+                        // Цикл обработки сообщений.
+                        // Их формат nick@@color@@message
+                        while (true) {
+                            String str = in.readUTF();
+
+                            if(str.equals(PROT_MSG_SERVER_CLOSED)) break;
+
+                            String[] parts = str.split(SEPARATOR);
 
                             // Чтобы избежать ошибки
                             // "Not on FX application thread"
                             Platform.runLater(new Runnable() {
                                 @Override
                                 public void run() {
-                                    stickMessage(conversation,
-                                            str.substring(colors[0].length()),
-                                            str.substring(0, colors[0].length()));
+                                    stickMessage(parts[0].equals(nickname), parts[1], parts[2]);
                                 }
                             });
-                            conversation = !conversation;
                         }
                     } catch (IOException e) {
                         System.out.println("Connection closed");
@@ -121,9 +172,8 @@ public class Controller implements Initializable {
     /**
      * Отобразить сообщение
      *
-     * @param isMine
      */
-    private void stickMessage(boolean isMine, String text, String color) {
+    private void stickMessage(boolean isMine, String color, String text) {
         // Элементы отображения сообщения
         HBox hb = new HBox();
         Label message = new Label(text);
@@ -185,4 +235,16 @@ public class Controller implements Initializable {
 
         return iconHb;
     }
+
+    // Включение/Отключение панелей окна
+    private void setAuthorized(boolean isAuthorized) {
+        this.isAuthorized = isAuthorized;
+        authPanel.setVisible(!isAuthorized);
+        authPanel.setManaged(!isAuthorized);
+        scrollPanel.setVisible(isAuthorized);
+        scrollPanel.setManaged(isAuthorized);
+        messageArea.setVisible(isAuthorized);
+        messageArea.setManaged(isAuthorized);
+    }
+
 }

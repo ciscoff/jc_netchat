@@ -1,5 +1,8 @@
 package server;
 
+import authorization.AuthService;
+import authorization.BaseAuthService;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -9,12 +12,16 @@ import static utils.Share.*;
 import static utils.Share.currentTime;
 
 public class ChatServer {
-    Hashtable<String, ClientHandler> clients =  new Hashtable<>();
+    private Hashtable<String, ClientHandler> clients =  new Hashtable<>();
+    private AuthService authService = null;
+
 
     public void start(){
 
+        authService = new BaseAuthService();
+
         ServerSocket serverSocket = null;
-        Socket client = null;
+        Socket clientSocket = null;
         boolean active = true;
 
         try {
@@ -23,11 +30,11 @@ public class ChatServer {
             int colorIdx = 0;
 
             while(active) {
-                client = serverSocket.accept();
-                System.out.println(currentTime() + ": Client " + clientId(client) + " connected");
+                clientSocket = serverSocket.accept();
 
+                // Выделить новому клиенту цвет фона сообщений
                 if(colorIdx == colors.length) colorIdx = 0;
-                clients.put(clientId(client), new ClientHandler(this, client, colors[colorIdx++]));
+                new ClientHandler(this, clientSocket, colors[colorIdx++]);
             }
 
         } catch (IOException e) {
@@ -36,7 +43,7 @@ public class ChatServer {
     }
 
     // Отправить сообщение всем клиентам
-    public void broadcastMessage(String message) {
+    public synchronized void broadcastMessage(String message) {
         Set<String> keys = clients.keySet();
         for(String key : keys) {
             ClientHandler ch = clients.get(key);
@@ -44,9 +51,19 @@ public class ChatServer {
         }
     }
 
-    // Удалить клиента из хеш-таблицы
-    public void removeClient(String id) {
-        clients.remove(id);
+    public AuthService getAuthService() {
+        return authService;
+    }
+
+    public synchronized boolean isNickBusy(String nickname) {
+        return clients.get(nickname) != null;
+    }
+
+    public synchronized void subscribe(ClientHandler ch) {
+        clients.put(ch.getNickname(), ch);
+    }
+    public synchronized void unsubscribe(ClientHandler ch) {
+        clients.remove(ch.getNickname());
     }
 
     public static void main(String[] args) {
