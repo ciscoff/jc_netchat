@@ -16,10 +16,11 @@ public class Share {
     public static final String PROT_MSG_AUTH = "/auth";
     public static final String PROT_MSG_AUTH_OK = "/authok";
     public static final String PROT_MSG_AUTH_ERROR = "Login or password incorrect";
-    public static final String PROT_MSG_AUTH_BUSSY = "User already joined";
+    public static final String PROT_MSG_AUTH_NICK_BUSSY = "User already joined";
 
     public static final String PROT_MSG_END = "/end";
     public static final String PROT_MSG_TO = "/w";
+    public static final String PROT_MSG_BYE = "Goodbye";
     public static final String PROT_MSG_SERVER_CLOSED = "/serverClosed";
 
     public static final String URL_JDBC = "jdbc:sqlite:main.db";

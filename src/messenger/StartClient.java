@@ -7,8 +7,9 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-public class Main extends Application {
+import static javafx.application.Application.launch;
 
+public class StartClient extends Application {
     private final int FrameWidth = 450;
     private final int FrameHeight = 600;
 

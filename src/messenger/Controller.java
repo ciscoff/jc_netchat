@@ -3,7 +3,6 @@
  * https://www.flaticon.com/free-icon/chat_134806
  */
 
-
 package messenger;
 
 import javafx.application.Platform;
@@ -32,7 +31,6 @@ public class Controller {
     DataInputStream in;
     DataOutputStream out;
     Socket socket;
-
 
     @FXML
     Button btnSend;
@@ -63,8 +61,6 @@ public class Controller {
 
     @FXML
     public void sendMessage() {
-//        stickMessage(conversation);
-//        conversation = !conversation;
 
         try {
             out.writeUTF(messageField.getText());
@@ -114,11 +110,9 @@ public class Controller {
             Thread receiver = new Thread(new Runnable() {
                 @Override
                 public void run() {
-
-                    String nickname;
+                    final String nickname;
 
                     try {
-
                         // Цикл авторизации
                         while (true) {
                             String str = in.readUTF();
@@ -126,7 +120,6 @@ public class Controller {
                             if (str.startsWith(PROT_MSG_AUTH_OK)) {
                                 String[] parts = str.split(SEPARATOR);
                                 nickname = parts[1];
-
                                 setAuthorized(true);
                                 break;
                             } else {
@@ -141,7 +134,7 @@ public class Controller {
                         }
 
                         // Цикл обработки сообщений.
-                        // Их формат nick@@color@@message
+                        // Поступают в формате nick@@color@@message
                         while (true) {
                             String str = in.readUTF();
 
@@ -151,7 +144,6 @@ public class Controller {
 
                             System.out.println(socket.getInetAddress() + ":" + socket.getPort());
 
-                            // Чтобы избежать ошибки
                             // "Not on FX application thread"
                             Platform.runLater(new Runnable() {
                                 @Override

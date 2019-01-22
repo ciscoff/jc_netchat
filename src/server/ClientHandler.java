@@ -14,11 +14,11 @@ import static utils.Share.*;
 public class ClientHandler {
     private ChatServer server;
     private Socket socket;
-    private DataInputStream is = null;
-    private DataOutputStream os = null;
-    private boolean active = true;
     private String nickname;
     private String color;
+
+    private DataInputStream is = null;
+    private DataOutputStream os = null;
 
     public ClientHandler(ChatServer server, Socket socket, String color) {
 
@@ -47,41 +47,31 @@ public class ClientHandler {
                                         sendMessage(PROT_MSG_AUTH_OK + SEPARATOR + nick);
                                         server.subscribe(ClientHandler.this);
                                         server.broadcastMessage(addMetaData(" joined to chat"));
-//                                        server.broadcastMessage(nick + SEPARATOR + systemColor + SEPARATOR + nick + " joined to chat");
                                         break;
-                                    } else {
-                                        sendMessage(PROT_MSG_AUTH_ERROR);
-                                    }
-                                }
-                                sendMessage(PROT_MSG_AUTH_ERROR);
+                                    } else { sendMessage(PROT_MSG_AUTH_NICK_BUSSY); }
+                                } else { sendMessage(PROT_MSG_AUTH_ERROR); }
                             }
                         }
 
                         // Цикл обмена сообщениями
                         while ((message = is.readUTF()) != null){
 
-                            if(message.startsWith(PROT_MSG_TO)) {
+                            if(message.startsWith(PROT_MSG_TO) /* /w nick message */) {
                                 String[] parts = message.split("\\s");
-                                server.sendTo(parts[1], addMetaData(" " + parts[2]));
-                            }
-
-                            if(message.equals(PROT_MSG_END)) {
-                                sendMessage("Goodbye");
-                                active = false;
+                                server.sendTo(parts[1], addMetaData(parts[2]));
+                                sendMessage(addMetaData(parts[2]));
+                            } else if(message.equals(PROT_MSG_END /* /end */ )) {
+                                server.broadcastMessage(addMetaData(" has left the chat"));
                                 break;
+                            } else {
+                                server.broadcastMessage(addMetaData(message));
+                                System.out.print("[" + currentTime() + ": " + nickname + "]: " + message + System.lineSeparator());
                             }
-
-                            server.broadcastMessage(addMetaData(message));
-                            server.broadcastMessage(nickname + SEPARATOR + color + SEPARATOR + message);
-                            System.out.print("[" + currentTime() + ": " + nickname + "]: " + message + System.lineSeparator());
                         }
-
                     } catch (IOException e) {
                         System.out.println("Client " + nickname + " disconnected");
-                        server.unsubscribe(ClientHandler.this);
-                        server.broadcastMessage(addMetaData(" has left the chat"););
-//                        server.broadcastMessage(nickname + SEPARATOR + systemColor + SEPARATOR + nickname + " has left the chat");
                     } finally {
+                        server.unsubscribe(ClientHandler.this);
                         closeResources(is, os, socket);
                     }
                 }
@@ -92,16 +82,12 @@ public class ClientHandler {
         }
     }
 
-//    public boolean isActive() {
-//        return active;
-//    }
-
     public String getNickname() {
         return nickname;
     }
 
     public String addMetaData(String message) {
-        return nickname + SEPARATOR + systemColor + SEPARATOR + nickname + message;
+        return nickname + SEPARATOR + color + SEPARATOR + message;
     }
 
     public void sendMessage(String message){

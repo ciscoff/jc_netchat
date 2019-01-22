@@ -50,7 +50,6 @@ public class ChatServer {
         for(String key : keys) {
             ClientHandler ch = clients.get(key);
             if(ch != null) ch.sendMessage(message);
-            //if(ch.isActive()) ch.sendMessage(message);
         }
     }
 
@@ -63,7 +62,6 @@ public class ChatServer {
     public synchronized boolean isNickBusy(String nickname) {
         return clients.get(nickname) != null;
     }
-
     public synchronized void subscribe(ClientHandler ch) {
         clients.put(ch.getNickname(), ch);
     }
