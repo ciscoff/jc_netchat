@@ -13,10 +13,13 @@ public class Share {
     public static final String SEPARATOR = "@@";
 
 
+    public static final String PROT_MSG_AUTH = "/auth";
     public static final String PROT_MSG_AUTH_OK = "/authok";
     public static final String PROT_MSG_AUTH_ERROR = "Login or password incorrect";
-    public static final String PROT_MSG_AUTH = "/auth";
+    public static final String PROT_MSG_AUTH_BUSSY = "User already joined";
+
     public static final String PROT_MSG_END = "/end";
+    public static final String PROT_MSG_TO = "/w";
     public static final String PROT_MSG_SERVER_CLOSED = "/serverClosed";
 
     public static final String URL_JDBC = "jdbc:sqlite:main.db";
@@ -26,6 +29,7 @@ public class Share {
      * Цвета оформления сообщений
      */
     public static final String[] colors = {"#efe4b0;", "#d2d2d2;", "#99d9ea;", "#7092be;", "#ffaec9;", "#b5e61d;", "#ffc90e;"};
+    public static final String systemColor = "#ffffff;";
 
     public static String currentTime() {
         return new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());

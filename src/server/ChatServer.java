@@ -49,8 +49,15 @@ public class ChatServer {
         Set<String> keys = clients.keySet();
         for(String key : keys) {
             ClientHandler ch = clients.get(key);
-            if(ch.isActive()) ch.sendMessage(message);
+            if(ch != null) ch.sendMessage(message);
+            //if(ch.isActive()) ch.sendMessage(message);
         }
+    }
+
+    // Отправить конкретному получателю
+    public synchronized void sendTo(String nick, String message) {
+        ClientHandler ch = clients.get(nick);
+        if(ch != null) ch.sendMessage(message);
     }
 
     public synchronized boolean isNickBusy(String nickname) {

@@ -37,16 +37,20 @@ public class ClientHandler {
 
                         // Цикл аутентификации
                         while((message = is.readUTF()) != null) {
-                            if(message.matches(REGEX_AUTH)) {
-                                String [] parts = message.split ( "\\s" );
+
+                            if(message.matches(REGEX_AUTH) /* /auth */) {
+                                String [] parts = message.split( "\\s" );
                                 String nick = ChatAuthService.getNickByLoginPass(parts[1], parts[2]);
                                 if(nick != null) {
                                     if(!server.isNickBusy(nick)){
                                         nickname = nick;
                                         sendMessage(PROT_MSG_AUTH_OK + SEPARATOR + nick);
                                         server.subscribe(ClientHandler.this);
-                                        server.broadcastMessage(nick + SEPARATOR + color + SEPARATOR + nick + " joined to chat");
+                                        server.broadcastMessage(addMetaData(" joined to chat"));
+//                                        server.broadcastMessage(nick + SEPARATOR + systemColor + SEPARATOR + nick + " joined to chat");
                                         break;
+                                    } else {
+                                        sendMessage(PROT_MSG_AUTH_ERROR);
                                     }
                                 }
                                 sendMessage(PROT_MSG_AUTH_ERROR);
@@ -55,11 +59,19 @@ public class ClientHandler {
 
                         // Цикл обмена сообщениями
                         while ((message = is.readUTF()) != null){
+
+                            if(message.startsWith(PROT_MSG_TO)) {
+                                String[] parts = message.split("\\s");
+                                server.sendTo(parts[1], addMetaData(" " + parts[2]));
+                            }
+
                             if(message.equals(PROT_MSG_END)) {
                                 sendMessage("Goodbye");
                                 active = false;
                                 break;
                             }
+
+                            server.broadcastMessage(addMetaData(message));
                             server.broadcastMessage(nickname + SEPARATOR + color + SEPARATOR + message);
                             System.out.print("[" + currentTime() + ": " + nickname + "]: " + message + System.lineSeparator());
                         }
@@ -67,6 +79,8 @@ public class ClientHandler {
                     } catch (IOException e) {
                         System.out.println("Client " + nickname + " disconnected");
                         server.unsubscribe(ClientHandler.this);
+                        server.broadcastMessage(addMetaData(" has left the chat"););
+//                        server.broadcastMessage(nickname + SEPARATOR + systemColor + SEPARATOR + nickname + " has left the chat");
                     } finally {
                         closeResources(is, os, socket);
                     }
@@ -78,12 +92,16 @@ public class ClientHandler {
         }
     }
 
-    public boolean isActive() {
-        return active;
-    }
+//    public boolean isActive() {
+//        return active;
+//    }
 
     public String getNickname() {
         return nickname;
+    }
+
+    public String addMetaData(String message) {
+        return nickname + SEPARATOR + systemColor + SEPARATOR + nickname + message;
     }
 
     public void sendMessage(String message){
