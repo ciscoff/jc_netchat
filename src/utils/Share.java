@@ -19,6 +19,9 @@ public class Share {
     public static final String PROT_MSG_END = "/end";
     public static final String PROT_MSG_SERVER_CLOSED = "/serverClosed";
 
+    public static final String URL_JDBC = "jdbc:sqlite:main.db";
+    public static final String JDBC_CLASS_NAME = "org.sqlite.JDBC";
+
     /**
      * Цвета оформления сообщений
      */

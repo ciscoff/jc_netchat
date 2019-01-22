@@ -14,10 +14,12 @@ public class BaseAuthService implements AuthService {
         }
     }
     private ArrayList < Entry > entries ;
+
     @Override
-    public void start () { }
+    public void connect () { }
     @Override
-    public void stop () { }
+    public void disconnect () { }
+
     public BaseAuthService () {
         entries = new ArrayList<>();
         entries . add ( new Entry ( "login1" , "pass1" , "nick1" ));

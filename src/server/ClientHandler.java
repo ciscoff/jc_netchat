@@ -1,5 +1,6 @@
 package server;
 
+import authorization.ChatAuthService;
 import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 
 import java.io.DataInputStream;
@@ -38,7 +39,7 @@ public class ClientHandler {
                         while((message = is.readUTF()) != null) {
                             if(message.matches(REGEX_AUTH)) {
                                 String [] parts = message.split ( "\\s" );
-                                String nick = server.getAuthService().getNickByLoginPass(parts[1], parts[2]);
+                                String nick = ChatAuthService.getNickByLoginPass(parts[1], parts[2]);
                                 if(nick != null) {
                                     if(!server.isNickBusy(nick)){
                                         nickname = nick;

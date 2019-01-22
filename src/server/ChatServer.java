@@ -2,6 +2,7 @@ package server;
 
 import authorization.AuthService;
 import authorization.BaseAuthService;
+import authorization.ChatAuthService;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -13,12 +14,10 @@ import static utils.Share.currentTime;
 
 public class ChatServer {
     private Hashtable<String, ClientHandler> clients =  new Hashtable<>();
-    private AuthService authService = null;
-
 
     public void start(){
 
-        authService = new BaseAuthService();
+        ChatAuthService.connect();
 
         ServerSocket serverSocket = null;
         Socket clientSocket = null;
@@ -39,6 +38,9 @@ public class ChatServer {
 
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            closeResources(serverSocket);
+            ChatAuthService.disconnect();
         }
     }
 
@@ -49,10 +51,6 @@ public class ChatServer {
             ClientHandler ch = clients.get(key);
             if(ch.isActive()) ch.sendMessage(message);
         }
-    }
-
-    public AuthService getAuthService() {
-        return authService;
     }
 
     public synchronized boolean isNickBusy(String nickname) {

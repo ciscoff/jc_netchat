@@ -1,7 +1,7 @@
 package authorization;
 
 public interface AuthService {
-    void start ();
+    void connect ();
+    void disconnect ();
     String getNickByLoginPass ( String login , String pass );
-    void stop ();
 }
