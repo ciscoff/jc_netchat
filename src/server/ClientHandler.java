@@ -57,7 +57,7 @@ public class ClientHandler {
                         while ((message = is.readUTF()) != null){
 
                             if(message.startsWith(PROT_MSG_TO) /* /w nick message */) {
-                                String[] parts = message.split("\\s");
+                                String[] parts = message.split(SEPARATOR);
                                 server.sendTo(parts[1], addMetaData(parts[2]));
                                 sendMessage(addMetaData(parts[2]));
                             } else if(message.equals(PROT_MSG_END /* /end */ )) {

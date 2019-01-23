@@ -61,7 +61,7 @@ public class Controller implements Initializable {
     @FXML
     HBox messageArea;
     @FXML
-    Label authReply;
+    Label lblAuthError;
 
     private static double xOffset = 0;
     private static double yOffset = 0;
@@ -89,7 +89,7 @@ public class Controller implements Initializable {
     public void sendMessage() {
 
         try {
-            out.writeUTF(messageField.getText());
+            out.writeUTF(formatRaw(messageField.getText()));
             messageField.clear();
             messageField.requestFocus();
         } catch (IOException e) {
@@ -119,7 +119,7 @@ public class Controller implements Initializable {
              * Нужно добавить обработку ситуации отправки пустой формы !!!
              */
 
-            authReply.setVisible(false);
+            lblAuthError.setVisible(false);
             loginField.clear();
             passwordField.clear();
         } catch (IOException e) {
@@ -127,6 +127,67 @@ public class Controller implements Initializable {
         }
     }
 
+    // Цикл аутентификации
+    private String authLoop() throws IOException {
+        String nickname = null;
+
+        while (true) {
+            String authReply = in.readUTF();
+
+            if (authReply.startsWith(PROT_MSG_AUTH_OK)) {
+                String[] parts = authReply.split(SEPARATOR);
+                nickname = parts[1];
+                setAuthorized(true);
+                break;
+            } else {
+                Platform.runLater(() -> {
+                            lblAuthError.setText(authReply);
+                            lblAuthError.setVisible(true);
+                        }
+                );
+            }
+        }
+        return nickname;
+    }
+
+    // Цикл работы в чате
+    private void conversationLoop(String nickname) throws IOException {
+
+        while (true) {
+            String message = in.readUTF();
+
+            if (message.equals(PROT_MSG_SERVER_CLOSED)) break;
+
+            String[] parts = message.split(SEPARATOR);
+
+            // "Not on FX application thread"
+            Platform.runLater(() -> {
+                stickMessage(parts[0].equals(nickname), parts[1], parts[0], parts[2]);
+            });
+        }
+    }
+
+    /**
+     * Превратить строку вида:
+     * /cmd nickTo Hello world !
+     * в отформатированную строку вида:
+     * /cmd@@nickTo@@Hello world !
+     */
+    private String formatRaw(String raw) {
+        String[] parts = raw.split("\\s");
+        String message;
+
+        switch (parts[0]) {
+            case PROT_MSG_TO:
+                message = parts[0] + SEPARATOR + parts[1] + SEPARATOR + String.join(" ", parts).substring(parts[0].length() + parts[1].length() + 2);
+                break;
+            default:
+                message = raw;
+        }
+        return message;
+    }
+
+    // Подключение к серверу, аутентификация, работа в чате
     private void connect() {
         try {
             socket = new Socket(HOST, PORT);
@@ -140,44 +201,42 @@ public class Controller implements Initializable {
 
                     try {
                         // Цикл авторизации
-                        while (true) {
-                            String str = in.readUTF();
+                        nickname = authLoop();
+                        // Цикл работы в чате
+                        conversationLoop(nickname);
 
-                            if (str.startsWith(PROT_MSG_AUTH_OK)) {
-                                String[] parts = str.split(SEPARATOR);
-                                nickname = parts[1];
-                                setAuthorized(true);
-                                break;
-                            } else {
-                                Platform.runLater(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        authReply.setText(str);
-                                        authReply.setVisible(true);
-                                    }
-                                });
-                            }
-                        }
+//                        while (true) {
+//                            String str = in.readUTF();
+//
+//                            if (str.startsWith(PROT_MSG_AUTH_OK)) {
+//                                String[] parts = str.split(SEPARATOR);
+//                                nickname = parts[1];
+//                                setAuthorized(true);
+//                                break;
+//                            } else {
+//                                Platform.runLater(() -> {
+//                                    lblAuthError.setText(str);
+//                                    lblAuthError.setVisible(true);
+//                                });
+//                            }
+//                        }
 
                         // Цикл обработки сообщений.
                         // Поступают в формате nick@@color@@message
-                        while (true) {
-                            String str = in.readUTF();
-
-                            if (str.equals(PROT_MSG_SERVER_CLOSED)) break;
-
-                            String[] parts = str.split(SEPARATOR);
-
-                            System.out.println(socket.getInetAddress() + ":" + socket.getPort());
-
-                            // "Not on FX application thread"
-                            Platform.runLater(new Runnable() {
-                                @Override
-                                public void run() {
-                                    stickMessage(parts[0].equals(nickname), parts[1], parts[0], parts[2]);
-                                }
-                            });
-                        }
+//                        while (true) {
+//                            String str = in.readUTF();
+//
+//                            if (str.equals(PROT_MSG_SERVER_CLOSED)) break;
+//
+//                            String[] parts = str.split(SEPARATOR);
+//
+//                            System.out.println(socket.getInetAddress() + ":" + socket.getPort());
+//
+//                            // "Not on FX application thread"
+//                            Platform.runLater(() -> {
+//                                stickMessage(parts[0].equals(nickname), parts[1], parts[0], parts[2]);
+//                            });
+//                        }
                     } catch (IOException e) {
                         System.out.println("Connection closed");
                     } finally {

@@ -56,7 +56,7 @@
             <TextField promptText="Login" fx:id="loginField" />
             <PasswordField promptText="Password" fx:id="passwordField" onAction="#tryToAuth"/>
             <Button text="Sign In" fx:id="btnAuth" onAction="#tryToAuth" alignment="CENTER"/>
-            <Label fx:id="authReply" text="" textFill="brown" style="-fx-font-style: italic; -fx-font-weight: bold;" visible="false"/>
+            <Label fx:id="lblAuthError" text="" textFill="brown" style="-fx-font-style: italic; -fx-font-weight: bold;" visible="false"/>
         </VBox>
 
     </VBox>
