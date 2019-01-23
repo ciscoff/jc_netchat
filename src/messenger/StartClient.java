@@ -18,7 +18,6 @@ public class StartClient extends Application {
         Parent root = FXMLLoader.load(getClass().getResource("../messenger/ChatGui.fxml"));
 
 //        primaryStage.initStyle(StageStyle.UNDECORATED);
-//        primaryStage.setTitle("Geekbrains chat");
         primaryStage.initStyle(StageStyle.TRANSPARENT);
         primaryStage.setScene(new Scene(root, FrameWidth, FrameHeight));
         primaryStage.show();

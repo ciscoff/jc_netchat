@@ -6,12 +6,14 @@
 package messenger;
 
 import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -25,13 +27,15 @@ import java.util.ResourceBundle;
 
 import static utils.Share.*;
 
-public class Controller {
+public class Controller implements Initializable {
 
     boolean isAuthorized;
     DataInputStream in;
     DataOutputStream out;
     Socket socket;
 
+    @FXML
+    VBox mainFrame;
     @FXML
     Button btnSend;
     @FXML
@@ -58,6 +62,32 @@ public class Controller {
     HBox messageArea;
     @FXML
     Label authReply;
+
+    private static double xOffset = 0;
+    private static double yOffset = 0;
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+
+        /**
+         * https://stackoverflow.com/questions/18173956/how-to-drag-undecorated-window
+         */
+        mainFrame.setOnMousePressed(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                xOffset = mainFrame.getScene().getWindow().getX() - event.getScreenX();
+                yOffset = mainFrame.getScene().getWindow().getY() - event.getScreenY();
+            }
+        });
+
+        mainFrame.setOnMouseDragged(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                mainFrame.getScene().getWindow().setX(event.getScreenX() + xOffset);
+                mainFrame.getScene().getWindow().setY(event.getScreenY() + yOffset);
+            }
+        });
+    }
 
     @FXML
     public void sendMessage() {
