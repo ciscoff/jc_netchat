@@ -68,10 +68,6 @@ public class Controller implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-
-        /**
-         * https://stackoverflow.com/questions/18173956/how-to-drag-undecorated-window
-         */
         mainFrame.setOnMousePressed(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
