@@ -61,20 +61,15 @@ public class ClientHandler implements ChatUtilizer {
     // Цикл аутентификации
     @Override
     public String authenticationLoop() throws IOException {
-        System.out.println("authenticationLoop");
         String message = null;
         String nick = null;
 
         while((message = is.readUTF()) != null) {
-            System.out.println(message);
-
             if(message.matches(REGEX_AUTH) /* /auth login password */) {
                 String [] parts = message.split( "\\s");
                 nick = ChatAuthService.getNickByLoginPass(parts[PROT_LOGIN], parts[PROT_PASS]);
-                System.out.println(nick);
                 if(nick != null) {
                     if(!server.isNickBusy(nick)){
-                        System.out.println(nick + " Not bussy");
                         sendMessage(PROT_MSG_AUTH_OK + SEPARATOR + nick);
                         startTime = FLAG_AUTHENTICATED;
                         break;
@@ -82,7 +77,6 @@ public class ClientHandler implements ChatUtilizer {
                 } else { sendMessage(PROT_MSG_AUTH_ERROR); }
             }
         }
-
         return nick;
     }
 
@@ -115,6 +109,15 @@ public class ClientHandler implements ChatUtilizer {
             /**
              * Нужно добавить код отключения коннекта
              */
+        }
+    }
+
+    // Закрыть сокет при простое
+    public void closeIfIdle() {
+        if(startTime != FLAG_AUTHENTICATED) {
+            if(msecToSec(System.currentTimeMillis() - startTime) > IDLE_TIMEOUT) {
+                closeResources(is, os, socket);
+            }
         }
     }
 

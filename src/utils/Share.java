@@ -30,6 +30,9 @@ public class Share {
     public static final int PROT_LOGIN = 1;
     public static final int PROT_PASS = 2;
 
+    public static final int CLEANER_TIMEOUT = 5;
+    public static final int IDLE_TIMEOUT = 30;
+
 
 
     public static final String URL_JDBC = "jdbc:sqlite:main.db";
@@ -56,4 +59,11 @@ public class Share {
         }
     }
 
+    public static long secToMsec(long sec) {
+        return (sec * 1000);
+    }
+
+    public static long msecToSec(long msec) {
+        return Math.abs(msec / 1000);
+    }
 }

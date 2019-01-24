@@ -19,6 +19,8 @@ public class ChatServer {
 
         ChatAuthService.connect();
 
+        new ResourceCleaner(this);
+
         ServerSocket serverSocket = null;
         Socket clientSocket = null;
         boolean active = true;
@@ -68,6 +70,7 @@ public class ChatServer {
     public synchronized void unsubscribe(ClientHandler ch) {
         clients.remove(ch.getNickname());
     }
+    public synchronized Hashtable<String, ClientHandler> getClients() { return clients; }
 
     public static void main(String[] args) {
         ChatServer server = new ChatServer();
