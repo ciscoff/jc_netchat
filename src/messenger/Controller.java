@@ -18,6 +18,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import network.ChatUtilizer;
 import server.ClientHandler;
 
 import java.io.*;
@@ -27,12 +28,13 @@ import java.util.ResourceBundle;
 
 import static utils.Share.*;
 
-public class Controller implements Initializable {
+public class Controller implements Initializable, ChatUtilizer {
 
     boolean isAuthorized;
-    DataInputStream in;
     DataOutputStream out;
+    DataInputStream in;
     Socket socket;
+    String nickname;
 
     @FXML
     VBox mainFrame;
@@ -128,7 +130,8 @@ public class Controller implements Initializable {
     }
 
     // Цикл аутентификации
-    private String authLoop() throws IOException {
+    @Override
+    public String authenticationLoop() throws IOException {
         String nickname = null;
 
         while (true) {
@@ -136,7 +139,7 @@ public class Controller implements Initializable {
 
             if (authReply.startsWith(PROT_MSG_AUTH_OK)) {
                 String[] parts = authReply.split(SEPARATOR);
-                nickname = parts[1];
+                nickname = parts[PROT_NICK_FROM];
                 setAuthorized(true);
                 break;
             } else {
@@ -151,19 +154,35 @@ public class Controller implements Initializable {
     }
 
     // Цикл работы в чате
-    private void conversationLoop(String nickname) throws IOException {
+    @Override
+    public void conversationLoop() throws IOException {
 
         while (true) {
             String message = in.readUTF();
 
-            if (message.equals(PROT_MSG_SERVER_CLOSED)) break;
+            if(message.startsWith(PROT_CMD_PREFIX)) {
+                commandProcessor(message);
+            } else {
+                String[] parts = message.split(SEPARATOR, 3);
 
-            String[] parts = message.split(SEPARATOR);
+                // "Not on FX application thread"
+                Platform.runLater(() -> {
+                    /**
+                     * equals проверяет имя отправителя с именем текущего клиента.
+                     * Если имена совпадают, то вернулось свое собственное сообщение и его
+                     * нужно отобразить с одной стороны окна чата, если различаются, то сообщение
+                     * чужое и его нужно поместить с другой стороны
+                     */
+                    stickMessage(parts[PROT_NICK_FROM].equals(nickname), parts[PROT_COLOR], parts[PROT_NICK_FROM], parts[PROT_MSG_BODY]);
+                });
+            }
+        }
+    }
 
-            // "Not on FX application thread"
-            Platform.runLater(() -> {
-                stickMessage(parts[0].equals(nickname), parts[1], parts[0], parts[2]);
-            });
+    @Override
+    public void commandProcessor(String command) throws IOException{
+        if (command.equals(PROT_MSG_SERVER_CLOSED)) {
+
         }
     }
 
@@ -197,13 +216,11 @@ public class Controller implements Initializable {
             Thread receiver = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    final String nickname;
-
                     try {
                         // Цикл авторизации
-                        nickname = authLoop();
+                        Controller.this.nickname = authenticationLoop();
                         // Цикл работы в чате
-                        conversationLoop(nickname);
+                        conversationLoop();
                     } catch (IOException e) {
                         System.out.println("Connection closed");
                     } finally {
