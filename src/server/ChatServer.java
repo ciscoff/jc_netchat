@@ -14,6 +14,7 @@ import static utils.Share.currentTime;
 
 public class ChatServer {
     private Hashtable<String, ClientHandler> clients =  new Hashtable<>();
+    private Vector<ClientHandler> pretenders = new Vector<>();
 
     public void start(){
 
@@ -35,7 +36,9 @@ public class ChatServer {
 
                 // Выделить новому клиенту цвет фона сообщений
                 if(colorIdx == colors.length) colorIdx = 0;
-                new ClientHandler(this, clientSocket, colors[colorIdx++]);
+                // И поместить в список кандидатов
+                pretenders.add(new ClientHandler(this, clientSocket, colors[colorIdx++]));
+                System.out.println("p = " + pretenders.size());
             }
 
         } catch (IOException e) {
@@ -65,12 +68,19 @@ public class ChatServer {
         return clients.get(nickname) != null;
     }
     public synchronized void subscribe(ClientHandler ch) {
-        clients.put(ch.getNickname(), ch);
+        if(ch.getNickname() != null) {
+            pretenders.remove(ch);
+            clients.put(ch.getNickname(), ch);
+        }
     }
     public synchronized void unsubscribe(ClientHandler ch) {
-        clients.remove(ch.getNickname());
+        if(ch.getNickname() != null) {
+            clients.remove(ch.getNickname());
+        }
     }
-    public synchronized Hashtable<String, ClientHandler> getClients() { return clients; }
+
+    public void removePretender(ClientHandler ch) {pretenders.remove(ch);}
+    public synchronized Vector<ClientHandler> getPretenders() { return pretenders; }
 
     public static void main(String[] args) {
         ChatServer server = new ChatServer();

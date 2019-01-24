@@ -2,6 +2,7 @@ package server;
 
 import java.util.Hashtable;
 import java.util.Set;
+import java.util.Vector;
 
 import static utils.Share.*;
 
@@ -22,17 +23,10 @@ public class ResourceCleaner extends Thread {
                 Thread.sleep(secToMsec(CLEANER_TIMEOUT));
             } catch (InterruptedException e) {e.printStackTrace();}
 
-            System.out.println("in ResourceCleaner");
+            Vector<ClientHandler> ps = server.getPretenders();
+            System.out.println("ResourceCleaner: pretenders = " + ps.size());
 
-            Hashtable<String, ClientHandler> clients = server.getClients();
-            Set<String> keys = clients.keySet();
-
-            System.out.println("ResourceCleaner: keay = " + keys.size());
-
-            for(String key : keys) {
-                ClientHandler ch = clients.get(key);
-                if(ch != null) ch.closeIfIdle();
-            }
+            ps.forEach((c) -> c.closeIfIdle());
         }
     }
 

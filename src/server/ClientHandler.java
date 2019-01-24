@@ -116,6 +116,7 @@ public class ClientHandler implements ChatUtilizer {
     public void closeIfIdle() {
         if(startTime != FLAG_AUTHENTICATED) {
             if(msecToSec(System.currentTimeMillis() - startTime) > IDLE_TIMEOUT) {
+                server.removePretender(this);
                 closeResources(is, os, socket);
             }
         }
