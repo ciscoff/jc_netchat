@@ -204,39 +204,6 @@ public class Controller implements Initializable {
                         nickname = authLoop();
                         // Цикл работы в чате
                         conversationLoop(nickname);
-
-//                        while (true) {
-//                            String str = in.readUTF();
-//
-//                            if (str.startsWith(PROT_MSG_AUTH_OK)) {
-//                                String[] parts = str.split(SEPARATOR);
-//                                nickname = parts[1];
-//                                setAuthorized(true);
-//                                break;
-//                            } else {
-//                                Platform.runLater(() -> {
-//                                    lblAuthError.setText(str);
-//                                    lblAuthError.setVisible(true);
-//                                });
-//                            }
-//                        }
-
-                        // Цикл обработки сообщений.
-                        // Поступают в формате nick@@color@@message
-//                        while (true) {
-//                            String str = in.readUTF();
-//
-//                            if (str.equals(PROT_MSG_SERVER_CLOSED)) break;
-//
-//                            String[] parts = str.split(SEPARATOR);
-//
-//                            System.out.println(socket.getInetAddress() + ":" + socket.getPort());
-//
-//                            // "Not on FX application thread"
-//                            Platform.runLater(() -> {
-//                                stickMessage(parts[0].equals(nickname), parts[1], parts[0], parts[2]);
-//                            });
-//                        }
                     } catch (IOException e) {
                         System.out.println("Connection closed");
                     } finally {
@@ -261,6 +228,10 @@ public class Controller implements Initializable {
         VBox vb = new VBox();
         Label nickname = new Label(nick);
         Label message = new Label(text);
+
+        hbPanel.setOnMouseClicked( (e) -> {
+            new PopupInput();
+        });
 
         // Стилевое оформление
         String fx_bg_content = "-fx-background-color: " + color;
