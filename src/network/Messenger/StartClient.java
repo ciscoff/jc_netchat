@@ -1,4 +1,4 @@
-package network.Messanger;
+package network.Messenger;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;

@@ -1,4 +1,4 @@
-package server;
+package network.Server;
 
 import static utils.Share.*;
 

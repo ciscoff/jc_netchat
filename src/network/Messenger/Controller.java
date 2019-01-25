@@ -3,7 +3,7 @@
  * https://www.flaticon.com/free-icon/chat_134806
  */
 
-package network.Messanger;
+package network.Messenger;
 
 import javafx.application.Platform;
 import javafx.event.EventHandler;
@@ -137,7 +137,7 @@ public class Controller implements Initializable, ChatUtilizer {
 
             if (authReply.startsWith(PROT_MSG_AUTH_OK)) {
                 String[] parts = authReply.split(SEPARATOR);
-                nickname = parts[PROT_NICK_FROM];
+                nickname = parts[PROT_MY_NICK];
                 setAuthorized(true);
                 break;
             } else {
@@ -191,12 +191,12 @@ public class Controller implements Initializable, ChatUtilizer {
      * /cmd@@nickTo@@Hello world !
      */
     private String formatRaw(String raw) {
-        String[] parts = raw.split("\\s");
+        String[] parts = raw.split("\\s", 3);
         String message;
 
         switch (parts[0]) {
-            case PROT_MSG_TO:
-                message = parts[0] + SEPARATOR + parts[1] + SEPARATOR + String.join(" ", parts).substring(parts[0].length() + parts[1].length() + 2);
+            case PROT_MSG_TO:   // /w nick_to message text
+                message = parts[PROT_CMD_IDX] + SEPARATOR + parts[PROT_NICK_TO] + SEPARATOR + parts[PROT_MSG_BODY];
                 break;
             default:
                 message = raw;

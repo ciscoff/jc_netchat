@@ -5,12 +5,35 @@ import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
+/**
+ * Форматы сообщений
+ * ===========================================
+ *
+ * Аутентификация от клиента
+ * /auth login password
+ *
+ * Ответ на аутентификацию:
+ * - успешная
+ * /authok@@nick
+ *
+ * ----------------------------------
+ * Обычное сообщение:
+ * -от клиента для всех
+ * "строка текста без метасимволов"
+ *
+ * - от клиента клиенту
+ * /w@@nick_to@@сообщение
+ */
+
+
+
 public class Share {
     public static final int PORT = 9191;
     public static final String HOST = "127.0.0.1";
 
     public static final String REGEX_AUTH = "^/auth\\s.+";
     public static final String SEPARATOR = "@@";
+    public static final String SOCKET_PREFIX = "/";
 
     public static final String PROT_MSG_AUTH = "/auth";
     public static final String PROT_MSG_AUTH_OK = "/authok";
@@ -23,12 +46,17 @@ public class Share {
     public static final String PROT_MSG_BYE = "Goodbye";
     public static final String PROT_MSG_SERVER_CLOSED = "/serverClosed";
 
-    public static final int PROT_NICK_FROM = 0;
-    public static final int PROT_COLOR = 1;
-    public static final int PROT_MSG_BODY = 2;
-    public static final int PROT_PARTS_NUM = 3;
-    public static final int PROT_LOGIN = 1;
-    public static final int PROT_PASS = 2;
+    public static final int PROT_CMD_IDX        = 0;
+    public static final int PROT_NICK_FROM      = 0;
+    public static final int PROT_NICK_TO        = 1;
+    public static final int PROT_MY_NICK        = 1;
+    public static final int PROT_COLOR          = 1;
+    public static final int PROT_LOGIN          = 1;
+    public static final int PROT_MSG_BODY       = 2;
+    public static final int PROT_PASSWORD       = 2;
+    public static final int PROT_PARTS_NUM      = 3;
+
+
 
     public static final int CLEANER_TIMEOUT = 5;
     public static final int IDLE_TIMEOUT = 30;

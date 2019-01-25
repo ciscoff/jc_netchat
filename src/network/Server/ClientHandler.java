@@ -1,11 +1,9 @@
-package server;
+package network.Server;
 
 import authorization.ChatAuthService;
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import network.ChatUtilizer;
 
 import java.io.DataInputStream;
-import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
@@ -23,10 +21,10 @@ public class ClientHandler implements ChatUtilizer {
     private DataInputStream is = null;
     private DataOutputStream os = null;
 
-    public ClientHandler(ChatServer server, Socket socket, String color) {
+    public ClientHandler(ChatServer server, Socket socket) {
 
         try {
-            this.color = color;
+            this.color = systemColor;
             this.server = server;
             this.socket = socket;
             this.is = new DataInputStream(socket.getInputStream());
@@ -37,11 +35,11 @@ public class ClientHandler implements ChatUtilizer {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    String message;
                     try {
 
                         // Цикл аутентификации
-                        if((nickname = authenticationLoop()) != null) {
+                        if((ClientHandler.this.nickname = authenticationLoop()) != null) {
+                            ClientHandler.this.color = server.assignColor();
                             server.subscribe(ClientHandler.this);
                             server.broadcastMessage(addMetaData(" joined to chat"));
                             conversationLoop();
@@ -68,12 +66,11 @@ public class ClientHandler implements ChatUtilizer {
 
         while((message = is.readUTF()) != null) {
             if(message.matches(REGEX_AUTH) /* /auth login password */) {
-                String [] parts = message.split( "\\s");
-                nick = ChatAuthService.getNickByLoginPass(parts[PROT_LOGIN], parts[PROT_PASS]);
+                String [] parts = message.split( "\\s", 3);
+                nick = ChatAuthService.getNickByLoginPass(parts[PROT_LOGIN], parts[PROT_PASSWORD]);
                 if(nick != null) {
                     if(!server.isNickBusy(nick)){
-                        sendMessage(PROT_MSG_AUTH_OK + SEPARATOR + nick);
-                        startTime = FLAG_AUTHENTICATED;
+                        sendMessage(PROT_MSG_AUTH_OK + SEPARATOR + nick); // /authok@@nick
                         break;
                     } else { sendMessage(PROT_MSG_AUTH_NICK_BUSSY); }
                 } else { sendMessage(PROT_MSG_AUTH_ERROR); }

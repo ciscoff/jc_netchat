@@ -1,7 +1,5 @@
-package server;
+package network.Server;
 
-import authorization.AuthService;
-import authorization.BaseAuthService;
 import authorization.ChatAuthService;
 
 import java.io.IOException;
@@ -13,6 +11,7 @@ import static utils.Share.*;
 
 public class ChatServer implements Cleaner {
     private HashMap<String, ClientHandler> clients = new HashMap<>();
+    private int colorIdx = 0;
 
     @Override
     public void scheduledCleaning() {
@@ -22,6 +21,7 @@ public class ChatServer implements Cleaner {
             Map.Entry<String, ClientHandler> pair = (Map.Entry) it.next();
 
             if (pair.getKey().startsWith(SOCKET_PREFIX) && pair.getValue().inIdleState()) {
+                System.out.println("Client " + pair.getKey() + " in idle state and will be closed");
                 it.remove();
             }
         }
@@ -42,15 +42,12 @@ public class ChatServer implements Cleaner {
         try {
             serverSocket = new ServerSocket(PORT);
             System.out.println("Chat server started on port " + PORT);
-            int colorIdx = 0;
 
             while (active) {
                 clientSocket = serverSocket.accept();
 
-                // Выделить новому клиенту цвет фона сообщений
-                if (colorIdx == colors.length) colorIdx = 0;
                 // И поместить в список кандидатов
-                subscribe(new ClientHandler(this, clientSocket, colors[colorIdx++]));
+                subscribe(new ClientHandler(this, clientSocket));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -60,12 +57,14 @@ public class ChatServer implements Cleaner {
         }
     }
 
-    // Отправить сообщение всем клиентам
+    // Отправить сообщение всем АВТОРИЗОВАННЫМ клиентам
     public synchronized void broadcastMessage(String message) {
         Set<String> keys = clients.keySet();
         for (String key : keys) {
-            ClientHandler ch = clients.get(key);
-            if (ch != null) ch.sendMessage(message);
+            if(!key.startsWith(SOCKET_PREFIX)) {
+                ClientHandler ch = clients.get(key);
+                if (ch != null) ch.sendMessage(message);
+            }
         }
     }
 
@@ -94,8 +93,16 @@ public class ChatServer implements Cleaner {
         clients.remove((nick != null) ? nick : ch.getConnectId());
     }
 
+    // Выделить авторизованному клиенту цвет фона сообщений
+    public String assignColor() {
+        if (colorIdx == colors.length) colorIdx = 0;
+        return colors[colorIdx++];
+    }
+
     public static void main(String[] args) {
         ChatServer server = new ChatServer();
         server.start();
     }
+
+
 }
