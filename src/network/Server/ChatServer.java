@@ -10,16 +10,29 @@ import java.net.Socket;
 import java.util.*;
 
 import static utils.Share.*;
-import static utils.Share.currentTime;
 
-public class ChatServer {
-    private Hashtable<String, ClientHandler> clients =  new Hashtable<>();
-    private Vector<ClientHandler> pretenders = new Vector<>();
+public class ChatServer implements Cleaner {
+    private HashMap<String, ClientHandler> clients = new HashMap<>();
 
-    public void start(){
+    @Override
+    public void scheduledCleaning() {
+        Iterator it = clients.entrySet().iterator();
 
+        while (it.hasNext()) {
+            Map.Entry<String, ClientHandler> pair = (Map.Entry) it.next();
+
+            if (pair.getKey().startsWith(SOCKET_PREFIX) && pair.getValue().inIdleState()) {
+                it.remove();
+            }
+        }
+    }
+
+    public void start() {
+
+        // Connect to DB
         ChatAuthService.connect();
 
+        // Start resource cleaner
         new ResourceCleaner(this);
 
         ServerSocket serverSocket = null;
@@ -31,16 +44,14 @@ public class ChatServer {
             System.out.println("Chat server started on port " + PORT);
             int colorIdx = 0;
 
-            while(active) {
+            while (active) {
                 clientSocket = serverSocket.accept();
 
                 // Выделить новому клиенту цвет фона сообщений
-                if(colorIdx == colors.length) colorIdx = 0;
+                if (colorIdx == colors.length) colorIdx = 0;
                 // И поместить в список кандидатов
-                pretenders.add(new ClientHandler(this, clientSocket, colors[colorIdx++]));
-                System.out.println("p = " + pretenders.size());
+                subscribe(new ClientHandler(this, clientSocket, colors[colorIdx++]));
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -52,35 +63,36 @@ public class ChatServer {
     // Отправить сообщение всем клиентам
     public synchronized void broadcastMessage(String message) {
         Set<String> keys = clients.keySet();
-        for(String key : keys) {
+        for (String key : keys) {
             ClientHandler ch = clients.get(key);
-            if(ch != null) ch.sendMessage(message);
+            if (ch != null) ch.sendMessage(message);
         }
     }
 
     // Отправить конкретному получателю
     public synchronized void sendTo(String nick, String message) {
         ClientHandler ch = clients.get(nick);
-        if(ch != null) ch.sendMessage(message);
+        if (ch != null) ch.sendMessage(message);
     }
 
     public synchronized boolean isNickBusy(String nickname) {
         return clients.get(nickname) != null;
     }
+
     public synchronized void subscribe(ClientHandler ch) {
-        if(ch.getNickname() != null) {
-            pretenders.remove(ch);
-            clients.put(ch.getNickname(), ch);
-        }
-    }
-    public synchronized void unsubscribe(ClientHandler ch) {
-        if(ch.getNickname() != null) {
-            clients.remove(ch.getNickname());
+        String nick = ch.getNickname();
+        if (nick != null) {
+            clients.remove(ch.getConnectId());
+            clients.put(nick, ch);
+        } else {
+            clients.put(ch.getConnectId(), ch);
         }
     }
 
-    public void removePretender(ClientHandler ch) {pretenders.remove(ch);}
-    public synchronized Vector<ClientHandler> getPretenders() { return pretenders; }
+    public synchronized void unsubscribe(ClientHandler ch) {
+        String nick = ch.getNickname();
+        clients.remove((nick != null) ? nick : ch.getConnectId());
+    }
 
     public static void main(String[] args) {
         ChatServer server = new ChatServer();

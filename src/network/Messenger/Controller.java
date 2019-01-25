@@ -3,7 +3,7 @@
  * https://www.flaticon.com/free-icon/chat_134806
  */
 
-package messenger;
+package network.Messanger;
 
 import javafx.application.Platform;
 import javafx.event.EventHandler;
@@ -15,11 +15,9 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import network.ChatUtilizer;
-import server.ClientHandler;
 
 import java.io.*;
 import java.net.Socket;

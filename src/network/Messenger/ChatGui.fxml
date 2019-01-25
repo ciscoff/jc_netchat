@@ -12,7 +12,7 @@
 
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.Label?>
-<VBox fx:controller="messenger.Controller"
+<VBox fx:controller="network.Messanger.Controller"
       xmlns:fx="http://javafx.com/fxml"
       stylesheets = "/css/chat_style.css"
       alignment="center" fx:id="mainFrame">

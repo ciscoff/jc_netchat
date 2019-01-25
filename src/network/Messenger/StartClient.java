@@ -1,4 +1,4 @@
-package messenger;
+package network.Messanger;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -13,7 +13,7 @@ public class StartClient extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Parent root = FXMLLoader.load(getClass().getResource("../messenger/ChatGui.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("ChatGui.fxml"));
 
 //        primaryStage.initStyle(StageStyle.UNDECORATED);
         primaryStage.initStyle(StageStyle.TRANSPARENT);

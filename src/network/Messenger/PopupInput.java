@@ -1,4 +1,4 @@
-package messenger;
+package network.Messanger;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

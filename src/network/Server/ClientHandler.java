@@ -16,6 +16,7 @@ public class ClientHandler implements ChatUtilizer {
     private ChatServer server;
     private Socket socket;
     private String nickname;
+    private String connectId;   // /127.0.0.1@@55191
     private String color;
     private long startTime; /* if == 0 than authenticated*/
 
@@ -31,6 +32,7 @@ public class ClientHandler implements ChatUtilizer {
             this.is = new DataInputStream(socket.getInputStream());
             this.os = new DataOutputStream(socket.getOutputStream());
             this.startTime = System.currentTimeMillis();
+            this.connectId = getConnectId();
 
             new Thread(new Runnable() {
                 @Override
@@ -113,13 +115,15 @@ public class ClientHandler implements ChatUtilizer {
     }
 
     // Закрыть сокет при простое
-    public void closeIfIdle() {
-        if(startTime != FLAG_AUTHENTICATED) {
+    public boolean inIdleState() {
+        boolean b = false;
+        if(nickname == null) {
             if(msecToSec(System.currentTimeMillis() - startTime) > IDLE_TIMEOUT) {
-                server.removePretender(this);
                 closeResources(is, os, socket);
+                b = true;
             }
         }
+        return b;
     }
 
     // Get nickname
@@ -138,5 +142,10 @@ public class ClientHandler implements ChatUtilizer {
             os.writeUTF(message);
             os.flush();
         } catch (IOException e) {e.printStackTrace();}
+    }
+
+    // Уникальный ID
+    public String getConnectId() {
+        return socket.getInetAddress() + SEPARATOR + socket.getPort();
     }
 }
