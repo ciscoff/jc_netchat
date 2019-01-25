@@ -40,11 +40,13 @@ public class Share {
     public static final String PROT_MSG_AUTH_ERROR = "Login or password incorrect";
     public static final String PROT_MSG_AUTH_NICK_BUSSY = "User already joined";
 
-    public static final String PROT_CMD_PREFIX = "/";
-    public static final String PROT_MSG_END = "/end";
-    public static final String PROT_MSG_TO = "/w";
-    public static final String PROT_MSG_BYE = "Goodbye";
-    public static final String PROT_MSG_SERVER_CLOSED = "/serverClosed";
+    public static final String PROT_CMD_PREFIX          = "/";
+    public static final String PROT_MSG_END             = "/end";
+    public static final String PROT_MSG_TO              = "/w";
+    public static final String PROT_MSG_BLOCK           = "/block"
+    public static final String PROT_MSG_BYE             = "Goodbye";
+    public static final String PROT_MSG_IDLE            = "/idle";
+    public static final String PROT_MSG_SERVER_CLOSED   = "/serverClosed";
 
     public static final int PROT_CMD_IDX        = 0;
     public static final int PROT_NICK_FROM      = 0;

@@ -1,6 +1,6 @@
 package network.Server;
 
-import authorization.ChatAuthService;
+import database.ChatAuthService;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -103,6 +103,5 @@ public class ChatServer implements Cleaner {
         ChatServer server = new ChatServer();
         server.start();
     }
-
 
 }

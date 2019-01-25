@@ -133,16 +133,18 @@ public class Controller implements Initializable, ChatUtilizer {
         String nickname = null;
 
         while (true) {
-            String authReply = in.readUTF();
+            String reply = in.readUTF();
 
-            if (authReply.startsWith(PROT_MSG_AUTH_OK)) {
-                String[] parts = authReply.split(SEPARATOR);
+            if(reply.startsWith(PROT_CMD_PREFIX)) {
+                commandProcessor(reply);
+            } else if (reply.startsWith(PROT_MSG_AUTH_OK)) {
+                String[] parts = reply.split(SEPARATOR);
                 nickname = parts[PROT_MY_NICK];
                 setAuthorized(true);
                 break;
             } else {
                 Platform.runLater(() -> {
-                            lblAuthError.setText(authReply);
+                            lblAuthError.setText(reply);
                             lblAuthError.setVisible(true);
                         }
                 );
@@ -179,8 +181,18 @@ public class Controller implements Initializable, ChatUtilizer {
 
     @Override
     public void commandProcessor(String command) throws IOException{
-        if (command.equals(PROT_MSG_SERVER_CLOSED)) {
 
+        String[] parts = command.split(SEPARATOR);
+
+        switch (parts[PROT_CMD_IDX]) {
+            case PROT_MSG_SERVER_CLOSED:
+                break;
+            case PROT_MSG_IDLE:
+                Platform.runLater(() -> {
+                    alert(parts[1]);
+                });
+
+                break;
         }
     }
 
@@ -244,9 +256,9 @@ public class Controller implements Initializable, ChatUtilizer {
         Label nickname = new Label(nick);
         Label message = new Label(text);
 
-        hbPanel.setOnMouseClicked( (e) -> {
-            new PopupInput();
-        });
+//        hbPanel.setOnMouseClicked( (e) -> {
+//            new PopupInput();
+//        });
 
         // Стилевое оформление
         String fx_bg_content = "-fx-background-color: " + color;
@@ -324,5 +336,13 @@ public class Controller implements Initializable, ChatUtilizer {
         scrollPanel.setManaged(isAuthorized);
         messageArea.setVisible(isAuthorized);
         messageArea.setManaged(isAuthorized);
+    }
+
+    // Сообщение об ошибке
+    private void alert(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setHeaderText("message");
+        alert.getDialogPane().setExpandableContent(new Label(message));
+        alert.showAndWait();
     }
 }

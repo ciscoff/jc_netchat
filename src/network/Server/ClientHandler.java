@@ -1,6 +1,6 @@
 package network.Server;
 
-import authorization.ChatAuthService;
+import database.ChatAuthService;
 import network.ChatUtilizer;
 
 import java.io.DataInputStream;
@@ -116,6 +116,7 @@ public class ClientHandler implements ChatUtilizer {
         boolean b = false;
         if(nickname == null) {
             if(msecToSec(System.currentTimeMillis() - startTime) > IDLE_TIMEOUT) {
+                sendMessage(PROT_MSG_IDLE + SEPARATOR + "Server Connection Timeout");
                 closeResources(is, os, socket);
                 b = true;
             }
