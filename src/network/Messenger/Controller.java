@@ -135,13 +135,13 @@ public class Controller implements Initializable, ChatUtilizer {
         while (true) {
             String reply = in.readUTF();
 
-            if(reply.startsWith(PROT_CMD_PREFIX)) {
-                commandProcessor(reply);
-            } else if (reply.startsWith(PROT_MSG_AUTH_OK)) {
+            if (reply.startsWith(PROT_MSG_AUTH_OK)) {
                 String[] parts = reply.split(SEPARATOR);
                 nickname = parts[PROT_MY_NICK];
                 setAuthorized(true);
                 break;
+            } else if (reply.startsWith(PROT_CMD_PREFIX)) {
+                commandProcessor(reply);
             } else {
                 Platform.runLater(() -> {
                             lblAuthError.setText(reply);
@@ -160,7 +160,7 @@ public class Controller implements Initializable, ChatUtilizer {
         while (true) {
             String message = in.readUTF();
 
-            if(message.startsWith(PROT_CMD_PREFIX)) {
+            if (message.startsWith(PROT_CMD_PREFIX)) {
                 commandProcessor(message);
             } else {
                 String[] parts = message.split(SEPARATOR, 3);
@@ -180,7 +180,7 @@ public class Controller implements Initializable, ChatUtilizer {
     }
 
     @Override
-    public void commandProcessor(String command) throws IOException{
+    public void commandProcessor(String command) throws IOException {
 
         String[] parts = command.split(SEPARATOR);
 
@@ -191,7 +191,6 @@ public class Controller implements Initializable, ChatUtilizer {
                 Platform.runLater(() -> {
                     alert(parts[1]);
                 });
-
                 break;
         }
     }
@@ -203,13 +202,14 @@ public class Controller implements Initializable, ChatUtilizer {
      * /cmd@@nickTo@@Hello world !
      */
     private String formatRaw(String raw) {
-        String[] parts = raw.split("\\s", 3);
-        String message;
+        String[] parts = parts = raw.split("\\s", 3);;
+        String message = null;
 
         switch (parts[0]) {
             case PROT_MSG_TO:   // /w nick_to message text
                 message = parts[PROT_CMD_IDX] + SEPARATOR + parts[PROT_NICK_TO] + SEPARATOR + parts[PROT_MSG_BODY];
                 break;
+//            case PROT_MSG_BLOCK:    // /block nickBl1 nickBl2 ...
             default:
                 message = raw;
         }

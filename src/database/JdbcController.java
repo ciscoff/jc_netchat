@@ -10,17 +10,7 @@ public class JdbcController {
     public Connection connection;
     public Statement statement;
 
-    private JdbcController() {}
-
-    private static class JdbcControllerHolder {
-        public static JdbcController instance = new JdbcController();
-    }
-
-    public static JdbcController getIdbc() {
-        return JdbcControllerHolder.instance;
-    }
-
-    public void connect() {
+    private JdbcController() {
         try {
             Class.forName(JDBC_CLASS_NAME);
             connection = DriverManager.getConnection(URL_JDBC);
@@ -32,12 +22,24 @@ public class JdbcController {
         }
     }
 
+    private static class JdbcControllerHolder {
+        public static JdbcController instance = new JdbcController();
+    }
+
+    public static JdbcController getIdbc() {
+        return JdbcControllerHolder.instance;
+    }
+
+    // Отключиться от базы
     public void disconnect() {
         try {
             connection.close();
         } catch (Exception e) {e.printStackTrace();}
     }
 
+
+
+    // Выполнить SELECT
     public synchronized ResultSet executeQuery(String sql) {
         ResultSet rs = null;
 
@@ -47,4 +49,12 @@ public class JdbcController {
 
         return rs;
     }
+
+    // Выполнить INSERT
+    public synchronized void executeUpdate(String sql) {
+        try {
+            statement.executeUpdate(sql);
+        } catch (SQLException e) {e.printStackTrace();}
+    }
+
 }

@@ -1,17 +1,20 @@
 package network.Server;
 
-import database.ChatAuthService;
+import database.JdbcInteractor;
 import network.ChatUtilizer;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.TreeSet;
 
 import static utils.Share.*;
 
 public class ClientHandler implements ChatUtilizer {
     private ChatServer server;
+    private JdbcInteractor ji;
     private Socket socket;
     private String nickname;
     private String connectId;   // /127.0.0.1@@55191
@@ -21,12 +24,13 @@ public class ClientHandler implements ChatUtilizer {
     private DataInputStream is = null;
     private DataOutputStream os = null;
 
-    public ClientHandler(ChatServer server, Socket socket) {
+    public ClientHandler(ChatServer server, Socket socket, JdbcInteractor ji) {
 
         try {
             this.color = systemColor;
             this.server = server;
             this.socket = socket;
+            this.ji = ji;
             this.is = new DataInputStream(socket.getInputStream());
             this.os = new DataOutputStream(socket.getOutputStream());
             this.startTime = System.currentTimeMillis();
@@ -67,7 +71,7 @@ public class ClientHandler implements ChatUtilizer {
         while((message = is.readUTF()) != null) {
             if(message.matches(REGEX_AUTH) /* /auth login password */) {
                 String [] parts = message.split( "\\s", 3);
-                nick = ChatAuthService.getNickByLoginPass(parts[PROT_LOGIN], parts[PROT_PASSWORD]);
+                nick = ji.getNickByLoginPass(parts[PROT_LOGIN], parts[PROT_PASSWORD]);
                 if(nick != null) {
                     if(!server.isNickBusy(nick)){
                         sendMessage(PROT_MSG_AUTH_OK + SEPARATOR + nick); // /authok@@nick
@@ -99,7 +103,7 @@ public class ClientHandler implements ChatUtilizer {
     // Обработка комманд
     @Override
     public void commandProcessor(String command) throws IOException {
-        if(command.startsWith(PROT_MSG_TO) /* /w nick message */) {
+        if(command.startsWith(PROT_MSG_TO) /* /w@@nick@@message */) {
             String[] parts = command.split(SEPARATOR, 3);
             server.sendTo(parts[1], addMetaData(parts[2]));
             sendMessage(addMetaData(parts[2]));
@@ -108,6 +112,11 @@ public class ClientHandler implements ChatUtilizer {
             /**
              * Нужно добавить код отключения коннекта
              */
+        } else if(command.startsWith(PROT_MSG_BLOCK)){  /* /block nickBl1 nickBl2 ...*/
+            String[] parts = command.split("\\s", 2);
+            ji.addBlackList(nickname, new TreeSet<String>(Arrays.asList(parts[1].split("\\s"))));
+        } else if(command.startsWith(PROT_MSG_SHOW_BL)) {   /* /showbl */
+            ji.getBlackList(nickname).forEach((s) -> System.out.println(s));
         }
     }
 

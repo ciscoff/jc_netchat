@@ -43,9 +43,11 @@ public class Share {
     public static final String PROT_CMD_PREFIX          = "/";
     public static final String PROT_MSG_END             = "/end";
     public static final String PROT_MSG_TO              = "/w";
-    public static final String PROT_MSG_BLOCK           = "/block"
+    public static final String PROT_MSG_BLOCK           = "/block";
     public static final String PROT_MSG_BYE             = "Goodbye";
     public static final String PROT_MSG_IDLE            = "/idle";
+    public static final String PROT_MSG_SHOW_BL         = "/showbl";
+
     public static final String PROT_MSG_SERVER_CLOSED   = "/serverClosed";
 
     public static final int PROT_CMD_IDX        = 0;

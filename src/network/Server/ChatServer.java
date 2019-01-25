@@ -1,6 +1,6 @@
 package network.Server;
 
-import database.ChatAuthService;
+import database.JdbcInteractor;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -11,6 +11,7 @@ import static utils.Share.*;
 
 public class ChatServer implements Cleaner {
     private HashMap<String, ClientHandler> clients = new HashMap<>();
+    private JdbcInteractor ji = null;
     private int colorIdx = 0;
 
     @Override
@@ -30,7 +31,7 @@ public class ChatServer implements Cleaner {
     public void start() {
 
         // Connect to DB
-        ChatAuthService.connect();
+        ji = new JdbcInteractor();
 
         // Start resource cleaner
         new ResourceCleaner(this);
@@ -47,13 +48,12 @@ public class ChatServer implements Cleaner {
                 clientSocket = serverSocket.accept();
 
                 // И поместить в список кандидатов
-                subscribe(new ClientHandler(this, clientSocket));
+                subscribe(new ClientHandler(this, clientSocket, ji));
             }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             closeResources(serverSocket);
-            ChatAuthService.disconnect();
         }
     }
 
