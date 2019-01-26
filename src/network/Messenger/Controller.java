@@ -62,6 +62,8 @@ public class Controller implements Initializable, ChatUtilizer {
     HBox messageArea;
     @FXML
     Label lblAuthError;
+    @FXML
+    ImageView imageConnect;
 
     private static double xOffset = 0;
     private static double yOffset = 0;
@@ -136,6 +138,7 @@ public class Controller implements Initializable, ChatUtilizer {
             String reply = in.readUTF();
 
             if (reply.startsWith(PROT_MSG_AUTH_OK)) {
+                imageConnect.setImage(new Image("/img/connected.png"));
                 String[] parts = reply.split(SEPARATOR);
                 nickname = parts[PROT_MY_NICK];
                 setAuthorized(true);
@@ -189,7 +192,9 @@ public class Controller implements Initializable, ChatUtilizer {
                 break;
             case PROT_MSG_IDLE:
                 Platform.runLater(() -> {
-                    alert(parts[1]);
+                    imageConnect.setImage(new Image("/img/disconnect.png"));
+                    lblAuthError.setText(parts[1]);
+                    lblAuthError.setVisible(true);
                 });
                 break;
         }
@@ -202,7 +207,8 @@ public class Controller implements Initializable, ChatUtilizer {
      * /cmd@@nickTo@@Hello world !
      */
     private String formatRaw(String raw) {
-        String[] parts = parts = raw.split("\\s", 3);;
+        String[] parts = parts = raw.split("\\s", 3);
+        ;
         String message = null;
 
         switch (parts[0]) {
@@ -222,6 +228,7 @@ public class Controller implements Initializable, ChatUtilizer {
             socket = new Socket(HOST, PORT);
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
+            imageConnect.setImage(new Image("/img/notauth.png"));
 
             Thread receiver = new Thread(new Runnable() {
                 @Override
@@ -338,11 +345,4 @@ public class Controller implements Initializable, ChatUtilizer {
         messageArea.setManaged(isAuthorized);
     }
 
-    // Сообщение об ошибке
-    private void alert(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setHeaderText("message");
-        alert.getDialogPane().setExpandableContent(new Label(message));
-        alert.showAndWait();
-    }
 }
