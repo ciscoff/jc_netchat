@@ -57,21 +57,32 @@ public class ChatServer implements Cleaner {
         }
     }
 
-    // Отправить сообщение всем АВТОРИЗОВАННЫМ клиентам
-    public synchronized void broadcastMessage(String message) {
-        Set<String> keys = clients.keySet();
-        for (String key : keys) {
-            if(!key.startsWith(SOCKET_PREFIX)) {
-                ClientHandler ch = clients.get(key);
-                if (ch != null) ch.sendMessage(message);
+    // Отправить сообщение всем АВТОРИЗОВАННЫМ клиентам с проверкой
+    // черного списка отправителя и каждого получателя.
+    public synchronized void broadcastMessage(ClientHandler sender, String message) {
+        clients.entrySet().forEach((e) -> {
+            if ((!e.getKey().startsWith(SOCKET_PREFIX)) && (allowedToSend(sender, e.getValue()))) {
+                e.getValue().sendMessage(message);
             }
-        }
+        });
+    }
+
+    // Проверить, что оба клиента не блокируют друг друга
+    private boolean allowedToSend(ClientHandler sender, ClientHandler recepient) {
+
+        if ((sender.getBlacklist().contains(recepient.getNickname())) ||
+                (recepient.getBlacklist().contains(sender.getNickname()))) return false;
+
+        return true;
     }
 
     // Отправить конкретному получателю
-    public synchronized void sendTo(String nick, String message) {
-        ClientHandler ch = clients.get(nick);
-        if (ch != null) ch.sendMessage(message);
+    public synchronized void sendTo(ClientHandler from, String nickTo, String message) {
+        ClientHandler chTo = clients.get(nickTo);
+
+        if((chTo != null) && allowedToSend(from, chTo)){
+            chTo.sendMessage(message);
+        }
     }
 
     public synchronized boolean isNickBusy(String nickname) {

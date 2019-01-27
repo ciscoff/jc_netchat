@@ -22,7 +22,9 @@ import network.ChatUtilizer;
 import java.io.*;
 import java.net.Socket;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.ResourceBundle;
+import java.util.TreeSet;
 
 import static utils.Share.*;
 
@@ -33,6 +35,7 @@ public class Controller implements Initializable, ChatUtilizer {
     DataInputStream in;
     Socket socket;
     String nickname;
+    TreeSet <String> blacklist;
 
     @FXML
     VBox mainFrame;
@@ -85,6 +88,8 @@ public class Controller implements Initializable, ChatUtilizer {
                 mainFrame.getScene().getWindow().setY(event.getScreenY() + yOffset);
             }
         });
+
+        blacklist = new TreeSet<>();
     }
 
     @FXML
@@ -166,7 +171,11 @@ public class Controller implements Initializable, ChatUtilizer {
             if (message.startsWith(PROT_CMD_PREFIX)) {
                 commandProcessor(message);
             } else {
+
                 String[] parts = message.split(SEPARATOR, 3);
+
+                // Блокировка нежелательных сообщений
+                if(blacklist.contains(parts[PROT_NICK_FROM])) continue;
 
                 // "Not on FX application thread"
                 Platform.runLater(() -> {
@@ -197,6 +206,10 @@ public class Controller implements Initializable, ChatUtilizer {
                     lblAuthError.setVisible(true);
                 });
                 break;
+            case PROT_MSG_BLOCK:
+                blacklist = (TreeSet<String>) Arrays.asList(parts);
+                blacklist.remove(parts[PROT_CMD_IDX]);
+                break;
         }
     }
 
@@ -207,8 +220,7 @@ public class Controller implements Initializable, ChatUtilizer {
      * /cmd@@nickTo@@Hello world !
      */
     private String formatRaw(String raw) {
-        String[] parts = parts = raw.split("\\s", 3);
-        ;
+        String[] parts = raw.split("\\s", 3);
         String message = null;
 
         switch (parts[0]) {

@@ -37,8 +37,6 @@ public class JdbcController {
         } catch (Exception e) {e.printStackTrace();}
     }
 
-
-
     // Выполнить SELECT
     public synchronized ResultSet executeQuery(String sql) {
         ResultSet rs = null;

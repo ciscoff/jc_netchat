@@ -7,8 +7,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Arrays;
-import java.util.TreeSet;
+import java.util.*;
 
 import static utils.Share.*;
 
@@ -19,7 +18,8 @@ public class ClientHandler implements ChatUtilizer {
     private String nickname;
     private String connectId;   // /127.0.0.1@@55191
     private String color;
-    private long startTime; /* if == 0 than authenticated*/
+    private TreeSet<String> blacklist;
+    private long startTime;
 
     private DataInputStream is = null;
     private DataOutputStream os = null;
@@ -42,10 +42,11 @@ public class ClientHandler implements ChatUtilizer {
                     try {
 
                         // Цикл аутентификации
-                        if((ClientHandler.this.nickname = authenticationLoop()) != null) {
+                        if ((ClientHandler.this.nickname = authenticationLoop()) != null) {
                             ClientHandler.this.color = server.assignColor();
                             server.subscribe(ClientHandler.this);
-                            server.broadcastMessage(addMetaData(" joined to chat"));
+                            blacklist = ji.getBlackList(nickname);
+                            server.broadcastMessage(ClientHandler.this, addMetaData(" joined to chat"));
                             conversationLoop();
                         }
                     } catch (IOException e) {
@@ -68,16 +69,21 @@ public class ClientHandler implements ChatUtilizer {
         String message = null;
         String nick = null;
 
-        while((message = is.readUTF()) != null) {
-            if(message.matches(REGEX_AUTH) /* /auth login password */) {
-                String [] parts = message.split( "\\s", 3);
+        while ((message = is.readUTF()) != null) {
+            if (message.matches(REGEX_AUTH) /* /auth login password */) {
+                String[] parts = message.split("\\s", 3);
                 nick = ji.getNickByLoginPass(parts[PROT_LOGIN], parts[PROT_PASSWORD]);
-                if(nick != null) {
-                    if(!server.isNickBusy(nick)){
-                        sendMessage(PROT_MSG_AUTH_OK + SEPARATOR + nick); // /authok@@nick
+                if (nick != null) {
+                    if (!server.isNickBusy(nick)) {
+                        // Сообщить об успешной аутентификации и отправить nickname
+                        sendMessage(PROT_MSG_AUTH_OK + SEPARATOR + nick);
                         break;
-                    } else { sendMessage(PROT_MSG_AUTH_NICK_BUSSY); }
-                } else { sendMessage(PROT_MSG_AUTH_ERROR); }
+                    } else {
+                        sendMessage(PROT_MSG_AUTH_NICK_BUSSY);
+                    }
+                } else {
+                    sendMessage(PROT_MSG_AUTH_ERROR);
+                }
             }
         }
         return nick;
@@ -89,12 +95,12 @@ public class ClientHandler implements ChatUtilizer {
 
         String message = null;
 
-        while ((message = is.readUTF()) != null){
+        while ((message = is.readUTF()) != null) {
 
-            if(message.startsWith(PROT_CMD_PREFIX)) {
+            if (message.startsWith(PROT_CMD_PREFIX)) {
                 commandProcessor(message);
             } else {
-                server.broadcastMessage(addMetaData(message));
+                server.broadcastMessage(this, addMetaData(message));
                 System.out.print("[" + currentTime() + ": " + nickname + "]: " + message + System.lineSeparator());
             }
         }
@@ -103,28 +109,44 @@ public class ClientHandler implements ChatUtilizer {
     // Обработка комманд
     @Override
     public void commandProcessor(String command) throws IOException {
-        if(command.startsWith(PROT_MSG_TO) /* /w@@nick@@message */) {
+        if (command.startsWith(PROT_MSG_TO) /* /w@@nick@@message */) {
             String[] parts = command.split(SEPARATOR, 3);
-            server.sendTo(parts[1], addMetaData(parts[2]));
+            server.sendTo(this, parts[1], addMetaData(parts[2]));
             sendMessage(addMetaData(parts[2]));
-        } else if(command.equals(PROT_MSG_END /* /end */ )) {
-            server.broadcastMessage(addMetaData(" has left the chat"));
+        } else if (command.equals(PROT_MSG_END /* /end */)) {
+            server.broadcastMessage(this, addMetaData(" has left the chat"));
             /**
              * Нужно добавить код отключения коннекта
              */
-        } else if(command.startsWith(PROT_MSG_BLOCK)){  /* /block nickBl1 nickBl2 ...*/
-            String[] parts = command.split("\\s", 2);
-            ji.addBlackList(nickname, new TreeSet<String>(Arrays.asList(parts[1].split("\\s"))));
-        } else if(command.startsWith(PROT_MSG_SHOW_BL)) {   /* /showbl */
+        } else if (command.startsWith(PROT_MSG_BLOCK)) {  /* "/block nickBl1 nickBl2 ..." */
+            List<String> ll = new LinkedList<>(Arrays.asList(command.split("\\s")));
+            ll.remove(0);                           /* remove "/block" */
+
+            // Нельзя добавлять свой ник в черный список
+            if(ll.contains(nickname)) ((LinkedList<String>) ll).remove(nickname);
+
+            // Обновить кеш blacklist
+            for(String s : ll){ blacklist.add(s);}
+            // Обновить sqlite blacklist
+            ji.addToBlackList(nickname, new TreeSet<>(ll));
+        } else if (command.startsWith(PROT_MSG_SHOW_BL)) {   /* /showbl */
             ji.getBlackList(nickname).forEach((s) -> System.out.println(s));
+        } else if(command.startsWith(PROT_MSG_UNBLOCK)) {
+            List<String> ll = new LinkedList<>(Arrays.asList(command.split("\\s")));
+            ll.remove(0);                           /* remove "/block" */
+
+            // Обновить кеш blacklist
+            for(String s : ll){ blacklist.remove(s);}
+            // Обновить sqlite blacklist
+            ji.removeFromBlackList(nickname, new TreeSet<>(ll));
         }
     }
 
     // Закрыть сокет при простое
     public boolean inIdleState() {
         boolean b = false;
-        if(nickname == null) {
-            if(msecToSec(System.currentTimeMillis() - startTime) > IDLE_TIMEOUT) {
+        if (nickname == null) {
+            if (msecToSec(System.currentTimeMillis() - startTime) > IDLE_TIMEOUT) {
                 sendMessage(PROT_MSG_IDLE + SEPARATOR + "Server Connection Timeout");
                 closeResources(is, os, socket);
                 b = true;
@@ -144,11 +166,18 @@ public class ClientHandler implements ChatUtilizer {
     }
 
     // Отправить сообщение в сокет
-    public void sendMessage(String message){
+    public void sendMessage(String message) {
         try {
             os.writeUTF(message);
             os.flush();
-        } catch (IOException e) {e.printStackTrace();}
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Получить blacklist
+    public TreeSet<String> getBlacklist() {
+        return blacklist;
     }
 
     // Уникальный ID

@@ -3,7 +3,10 @@ package utils;
 import java.io.Closeable;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
+import java.util.TreeSet;
 
 /**
  * Форматы сообщений
@@ -44,7 +47,8 @@ public class Share {
     public static final String PROT_MSG_END             = "/end";
     public static final String PROT_MSG_TO              = "/w";
     public static final String PROT_MSG_BLOCK           = "/block";
-    public static final String PROT_MSG_BYE             = "Goodbye";
+    public static final String PROT_MSG_UNBLOCK         = "/unblock";
+    public static final String PROT_MSG_BYE             = "/Goodbye";
     public static final String PROT_MSG_IDLE            = "/idle";
     public static final String PROT_MSG_SHOW_BL         = "/showbl";
 
@@ -67,7 +71,7 @@ public class Share {
 
 
 
-    public static final String URL_JDBC = "jdbc:sqlite:main.db";
+    public static final String URL_JDBC = "jdbc:sqlite:gbchat.db";
     public static final String JDBC_CLASS_NAME = "org.sqlite.JDBC";
 
     public static final long FLAG_AUTHENTICATED = 0;
@@ -98,4 +102,12 @@ public class Share {
     public static long msecToSec(long msec) {
         return Math.abs(msec / 1000);
     }
+
+//    public static <T> TreeSet<T> arrayToTreeSet(T[] ar) {
+//        return (TreeSet<T>)Arrays.asList(ar);
+//    }
+//
+//    public static <T> T[] treeSetToArray(TreeSet<T> ts) {
+//        return ts.toArray(new T[ts.size()]);
+//    }
 }
