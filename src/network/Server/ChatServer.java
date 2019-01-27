@@ -22,7 +22,6 @@ public class ChatServer implements Cleaner {
             Map.Entry<String, ClientHandler> pair = (Map.Entry) it.next();
 
             if (pair.getKey().startsWith(SOCKET_PREFIX) && pair.getValue().inIdleState()) {
-                System.out.println("Client " + pair.getKey() + " in idle state and will be closed");
                 it.remove();
             }
         }

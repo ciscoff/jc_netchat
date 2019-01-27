@@ -92,11 +92,9 @@ public class ClientHandler implements ChatUtilizer {
     // Цикл обработки сообщений
     @Override
     public void conversationLoop() throws IOException {
-
         String message = null;
 
         while ((message = is.readUTF()) != null) {
-
             if (message.startsWith(PROT_CMD_PREFIX)) {
                 commandProcessor(message);
             } else {
@@ -121,10 +119,8 @@ public class ClientHandler implements ChatUtilizer {
         } else if (command.startsWith(PROT_MSG_BLOCK)) {  /* "/block nickBl1 nickBl2 ..." */
             List<String> ll = new LinkedList<>(Arrays.asList(command.split("\\s")));
             ll.remove(0);                           /* remove "/block" */
-
             // Нельзя добавлять свой ник в черный список
             if(ll.contains(nickname)) ((LinkedList<String>) ll).remove(nickname);
-
             // Обновить кеш blacklist
             for(String s : ll){ blacklist.add(s);}
             // Обновить sqlite blacklist
@@ -134,7 +130,6 @@ public class ClientHandler implements ChatUtilizer {
         } else if(command.startsWith(PROT_MSG_UNBLOCK)) {
             List<String> ll = new LinkedList<>(Arrays.asList(command.split("\\s")));
             ll.remove(0);                           /* remove "/block" */
-
             // Обновить кеш blacklist
             for(String s : ll){ blacklist.remove(s);}
             // Обновить sqlite blacklist

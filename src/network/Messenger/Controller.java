@@ -35,7 +35,6 @@ public class Controller implements Initializable, ChatUtilizer {
     DataInputStream in;
     Socket socket;
     String nickname;
-    TreeSet <String> blacklist;
 
     @FXML
     VBox mainFrame;
@@ -88,8 +87,6 @@ public class Controller implements Initializable, ChatUtilizer {
                 mainFrame.getScene().getWindow().setY(event.getScreenY() + yOffset);
             }
         });
-
-        blacklist = new TreeSet<>();
     }
 
     @FXML
@@ -171,11 +168,7 @@ public class Controller implements Initializable, ChatUtilizer {
             if (message.startsWith(PROT_CMD_PREFIX)) {
                 commandProcessor(message);
             } else {
-
                 String[] parts = message.split(SEPARATOR, 3);
-
-                // Блокировка нежелательных сообщений
-                if(blacklist.contains(parts[PROT_NICK_FROM])) continue;
 
                 // "Not on FX application thread"
                 Platform.runLater(() -> {
@@ -206,10 +199,6 @@ public class Controller implements Initializable, ChatUtilizer {
                     lblAuthError.setVisible(true);
                 });
                 break;
-            case PROT_MSG_BLOCK:
-                blacklist = (TreeSet<String>) Arrays.asList(parts);
-                blacklist.remove(parts[PROT_CMD_IDX]);
-                break;
         }
     }
 
@@ -227,7 +216,6 @@ public class Controller implements Initializable, ChatUtilizer {
             case PROT_MSG_TO:   // /w nick_to message text
                 message = parts[PROT_CMD_IDX] + SEPARATOR + parts[PROT_NICK_TO] + SEPARATOR + parts[PROT_MSG_BODY];
                 break;
-//            case PROT_MSG_BLOCK:    // /block nickBl1 nickBl2 ...
             default:
                 message = raw;
         }
@@ -274,10 +262,6 @@ public class Controller implements Initializable, ChatUtilizer {
         VBox vb = new VBox();
         Label nickname = new Label(nick);
         Label message = new Label(text);
-
-//        hbPanel.setOnMouseClicked( (e) -> {
-//            new PopupInput();
-//        });
 
         // Стилевое оформление
         String fx_bg_content = "-fx-background-color: " + color;
@@ -356,5 +340,4 @@ public class Controller implements Initializable, ChatUtilizer {
         messageArea.setVisible(isAuthorized);
         messageArea.setManaged(isAuthorized);
     }
-
 }
