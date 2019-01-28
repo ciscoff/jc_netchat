@@ -62,7 +62,7 @@ public class Share {
     public static final int PROT_PASSWORD = 2;
     public static final int PROT_PARTS_NUM = 3;
 
-    public static final int CLEANER_TIMEOUT = 5;
+    public static final int CLEANER_TIMEOUT = 1;
     public static final int IDLE_TIMEOUT = 30;
 
     public static final String URL_JDBC = "jdbc:sqlite:gbchat.db";
