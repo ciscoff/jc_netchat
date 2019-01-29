@@ -5,10 +5,14 @@
 
 package network.Messenger;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -17,6 +21,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import network.ChatUtilizer;
 
 import java.io.*;
@@ -69,6 +74,8 @@ public class Controller implements Initializable, ChatUtilizer {
 
     private static double xOffset = 0;
     private static double yOffset = 0;
+    private static boolean shakeFlagX;
+    private static boolean shakeFlagY;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -150,13 +157,16 @@ public class Controller implements Initializable, ChatUtilizer {
             } else {
                 Platform.runLater(() -> {
                             lblAuthError.setText(reply);
+                            lblAuthError.setStyle("-fx-text-fill: #828282;");
                             lblAuthError.setVisible(true);
+                            shakeFrame();
                         }
                 );
             }
         }
         return nickname;
     }
+
 
     // Цикл работы в чате
     @Override
@@ -196,6 +206,13 @@ public class Controller implements Initializable, ChatUtilizer {
                 Platform.runLater(() -> {
                     imageConnect.setImage(new Image("/img/disconnect.png"));
                     lblAuthError.setText(parts[1]);
+                    lblAuthError.setPadding(new Insets(5));
+                    lblAuthError.setStyle("-fx-text-fill: red;" +
+                            "-fx-border-width: 2;" +
+                            "-fx-border-radius: 5;" +
+                            "-fx-border-color: red;" +
+                            "-fx-background-radius: 0;" +
+                            "-fx-background-radius: 5;");
                     lblAuthError.setVisible(true);
                 });
                 break;
@@ -339,5 +356,47 @@ public class Controller implements Initializable, ChatUtilizer {
         scrollPanel.setManaged(isAuthorized);
         messageArea.setVisible(isAuthorized);
         messageArea.setManaged(isAuthorized);
+    }
+
+    /**
+     * https://stackoverflow.com/questions/16634960/shaking-stage-in-javafx
+     */
+    public void shakeFrame() {
+
+        Stage primaryStage = (Stage) mainFrame.getScene().getWindow();
+        shakeFlagX = true;
+        shakeFlagY = true;
+
+        Timeline timelineX = new Timeline(new KeyFrame(Duration.seconds(0.07), new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent t) {
+                if (shakeFlagX) {
+                    primaryStage.setX(primaryStage.getX() + 8);
+                } else {
+                    primaryStage.setX(primaryStage.getX() - 8);
+                }
+                shakeFlagX = !shakeFlagX;
+            }
+        }));
+
+        timelineX.setCycleCount(4);
+        timelineX.setAutoReverse(false);
+        timelineX.play();
+
+        Timeline timelineY = new Timeline(new KeyFrame(Duration.seconds(0.07), new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent t) {
+                if (shakeFlagY) {
+                    primaryStage.setY(primaryStage.getY() + 8);
+                } else {
+                    primaryStage.setY(primaryStage.getY() - 8);
+                }
+                shakeFlagY = !shakeFlagY;
+            }
+        }));
+
+        timelineY.setCycleCount(4);
+        timelineY.setAutoReverse(false);
+        timelineY.play();
     }
 }
