@@ -109,9 +109,12 @@ public class ChatServer implements Cleaner {
         return colors[colorIdx++];
     }
 
+    /**
+     *
+     * Старт сервера
+     */
     public static void main(String[] args) {
         ChatServer server = new ChatServer();
         server.start();
     }
-
 }

@@ -364,9 +364,7 @@ public class Controller implements Initializable, ChatUtilizer {
         messageArea.setManaged(isAuthorized);
     }
 
-    /**
-     * https://stackoverflow.com/questions/16634960/shaking-stage-in-javafx
-     */
+    // Втряхнуть окно
     public void shakeFrame() {
 
         Stage primaryStage = (Stage) mainFrame.getScene().getWindow();
