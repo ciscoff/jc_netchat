@@ -157,7 +157,13 @@ public class Controller implements Initializable, ChatUtilizer {
             } else {
                 Platform.runLater(() -> {
                             lblAuthError.setText(reply);
-                            lblAuthError.setStyle("-fx-text-fill: #828282;");
+                            lblAuthError.setPadding(new Insets(5));
+                            lblAuthError.setStyle("-fx-text-fill: #828282;" +
+                                    "-fx-border-width: 2;" +
+                                    "-fx-border-radius: 5;" +
+                                    "-fx-border-color: white;" +
+                                    "-fx-background-radius: 0;" +
+                                    "-fx-background-radius: 5;");
                             lblAuthError.setVisible(true);
                             shakeFrame();
                         }
@@ -371,9 +377,9 @@ public class Controller implements Initializable, ChatUtilizer {
             @Override
             public void handle(ActionEvent t) {
                 if (shakeFlagX) {
-                    primaryStage.setX(primaryStage.getX() + 8);
+                    primaryStage.setX(primaryStage.getX() + 5);
                 } else {
-                    primaryStage.setX(primaryStage.getX() - 8);
+                    primaryStage.setX(primaryStage.getX() - 5);
                 }
                 shakeFlagX = !shakeFlagX;
             }
@@ -387,9 +393,9 @@ public class Controller implements Initializable, ChatUtilizer {
             @Override
             public void handle(ActionEvent t) {
                 if (shakeFlagY) {
-                    primaryStage.setY(primaryStage.getY() + 8);
+                    primaryStage.setY(primaryStage.getY() + 5);
                 } else {
-                    primaryStage.setY(primaryStage.getY() - 8);
+                    primaryStage.setY(primaryStage.getY() - 5);
                 }
                 shakeFlagY = !shakeFlagY;
             }
