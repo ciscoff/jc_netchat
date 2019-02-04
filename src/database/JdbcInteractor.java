@@ -10,9 +10,16 @@ public class JdbcInteractor {
     private JdbcController jc;
 
     public JdbcInteractor() {
+
         this.jc = JdbcController.getIdbc();
+        clearHistory();
     }
 
+
+    // Очистить историю
+    public void clearHistory() {
+        jc.executeUpdate("DELETE FROM history");
+    }
 
     // Аутентификация по базе
     public synchronized String getNickByLoginPass(String login, String pass) {
@@ -91,6 +98,12 @@ public class JdbcInteractor {
 
     // Получить историю чата
     public synchronized HistoryEntry[] getHistory(){
+        String rrr =
+                "SELECT nickname FROM users WHERE id IN " +
+                "(SELECT blocked_nick_id FROM blacklist WHERE nick_id = " +
+                "(SELECT id FROM users WHERE nickname ='%s'))";
+
+
 
         ResultSet rs = jc.executeQuery("SELECT * FROM history");
         ArrayList<HistoryEntry> al = new ArrayList<>();
@@ -110,5 +123,4 @@ public class JdbcInteractor {
 
         return al.toArray(new HistoryEntry[al.size()]);
     }
-
 }

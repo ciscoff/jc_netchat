@@ -63,8 +63,14 @@ public class ChatServer implements Cleaner {
     boolean inHistory;
 
 
-    // Отправить сообщение всем АВТОРИЗОВАННЫМ клиентам с проверкой
-    // черного списка отправителя и каждого получателя.
+    /**
+     * Отправить сообщение всем АВТОРИЗОВАННЫМ клиентам с проверкой черного списка отправителя и каждого получателя.
+     *
+     * Все обычные соообщения отправляются в формате "nickFrom@@color@text_message"
+     * Все служебные сообщения предваряются префиксом "/", их не помещаем в history.
+     * В history сохраняем всё без учета blacklist'а
+     */
+
     public synchronized void broadcastMessage(ClientHandler sender, String message) {
         inHistory = false;
 
@@ -76,9 +82,11 @@ public class ChatServer implements Cleaner {
             // Поместить сообщение в историю
             if(!inHistory) {
                 // Так как сообщения отправляются в формате 'nick1@@#efe4b0;@@какой-то_текстс',
-                // то их нужно укладвыать в кавычки. Иначе ошибка.
-                ji.toHistory(sender.getNickname(), PROT_MSG_BROADCAST, "'" + message + "'");
-                inHistory = true;
+                // то их нужно укладывать в кавычки. Иначе ошибка.
+                if(!message.startsWith(PROT_CMD_PREFIX)) {
+                    ji.toHistory(sender.getNickname(), PROT_MSG_BROADCAST, "'" + message + "'");
+                    inHistory = true;
+                }
             }
 
             // Проверить черный список и отправить
@@ -92,15 +100,25 @@ public class ChatServer implements Cleaner {
     public synchronized void sendTo(ClientHandler from, String nickTo, String message) {
         ClientHandler chTo = clients.get(nickTo);
 
+        // Отправительнь существует ?
         if(chTo == null) return;
-        ji.toHistory(from.getNickname(), nickTo, "'" + message + "'");
+
+        // Не сохраняем служебные сообщения
+        if(!message.startsWith(PROT_CMD_PREFIX)) {
+            ji.toHistory(from.getNickname(), nickTo, "'" + message + "'");
+        }
+
+        // Проверка черного списка
         if(allowedToSend(from, chTo)) chTo.sendMessage(message);
     }
 
     // Отправить историю чата новому клиенту
-    public synchronized void sendHistory(ClientHandler sender, HistoryEntry[] history){
+    public synchronized void sendHistory(ClientHandler newClient, HistoryEntry[] history){
         for(HistoryEntry entry: history) {
-            sender.sendMessage(entry.getMsg());
+
+            // Отправляем сообщение если отправитель не из черного списка получателя
+            System.out.println("sendHistory " + entry.getFrom());
+            if(!newClient.getBlacklist().contains(entry.getFrom())) newClient.sendMessage(entry.getMsg());
         }
     }
 
