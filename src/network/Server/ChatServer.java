@@ -1,5 +1,6 @@
 package network.Server;
 
+import database.HistoryEntry;
 import database.JdbcInteractor;
 
 import java.io.IOException;
@@ -56,14 +57,51 @@ public class ChatServer implements Cleaner {
         }
     }
 
+    /**
+     *  TODO: Этот костыль исправить !!!!!
+     */
+    boolean inHistory;
+
+
     // Отправить сообщение всем АВТОРИЗОВАННЫМ клиентам с проверкой
     // черного списка отправителя и каждого получателя.
     public synchronized void broadcastMessage(ClientHandler sender, String message) {
+        inHistory = false;
+
         clients.entrySet().forEach((e) -> {
-            if ((!e.getKey().startsWith(SOCKET_PREFIX)) && (allowedToSend(sender, e.getValue()))) {
+
+            // Отправить можно только авторизованному клиенту
+            if(e.getKey().startsWith(SOCKET_PREFIX)) return;
+
+            // Поместить сообщение в историю
+            if(!inHistory) {
+                // Так как сообщения отправляются в формате 'nick1@@#efe4b0;@@какой-то_текстс',
+                // то их нужно укладвыать в кавычки. Иначе ошибка.
+                ji.toHistory(sender.getNickname(), PROT_MSG_BROADCAST, "'" + message + "'");
+                inHistory = true;
+            }
+
+            // Проверить черный список и отправить
+            if (allowedToSend(sender, e.getValue())) {
                 e.getValue().sendMessage(message);
             }
         });
+    }
+
+    // Отправить конкретному получателю
+    public synchronized void sendTo(ClientHandler from, String nickTo, String message) {
+        ClientHandler chTo = clients.get(nickTo);
+
+        if(chTo == null) return;
+        ji.toHistory(from.getNickname(), nickTo, "'" + message + "'");
+        if(allowedToSend(from, chTo)) chTo.sendMessage(message);
+    }
+
+    // Отправить историю чата новому клиенту
+    public synchronized void sendHistory(ClientHandler sender, HistoryEntry[] history){
+        for(HistoryEntry entry: history) {
+            sender.sendMessage(entry.getMsg());
+        }
     }
 
     // Проверить, что оба клиента не блокируют друг друга
@@ -73,15 +111,6 @@ public class ChatServer implements Cleaner {
                 (recepient.getBlacklist().contains(sender.getNickname()))) return false;
 
         return true;
-    }
-
-    // Отправить конкретному получателю
-    public synchronized void sendTo(ClientHandler from, String nickTo, String message) {
-        ClientHandler chTo = clients.get(nickTo);
-
-        if((chTo != null) && allowedToSend(from, chTo)){
-            chTo.sendMessage(message);
-        }
     }
 
     public synchronized boolean isNickBusy(String nickname) {

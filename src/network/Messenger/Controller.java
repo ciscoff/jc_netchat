@@ -173,7 +173,6 @@ public class Controller implements Initializable, ChatUtilizer {
         return nickname;
     }
 
-
     // Цикл работы в чате
     @Override
     public void conversationLoop() throws IOException {

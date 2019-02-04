@@ -46,6 +46,7 @@ public class ClientHandler implements ChatUtilizer {
                             ClientHandler.this.color = server.assignColor();
                             server.subscribe(ClientHandler.this);
                             blacklist = ji.getBlackList(nickname);
+                            server.sendHistory(ClientHandler.this, ji.getHistory());
                             server.broadcastMessage(ClientHandler.this, addMetaData(" joined to chat"));
                             conversationLoop();
                         }
@@ -179,4 +180,6 @@ public class ClientHandler implements ChatUtilizer {
     public String getConnectId() {
         return socket.getInetAddress() + SEPARATOR + socket.getPort();
     }
+
+
 }

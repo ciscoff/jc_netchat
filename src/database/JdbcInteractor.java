@@ -2,6 +2,7 @@ package database;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.TreeSet;
 
 public class JdbcInteractor {
@@ -77,4 +78,37 @@ public class JdbcInteractor {
             jc.executeUpdate(query);
         }
     }
+
+    // Сохранить сообщение в базе
+    public synchronized void toHistory(String sender, String receiver, String message) {
+
+        String query = String.format(
+                "INSERT INTO history (sender, receiver, message) VALUES\n" +
+                        "((SELECT A.id FROM users A where nickname = '%s'),\n" +
+                        "(SELECT B.id FROM users B WHERE B.nickname = '%s'), %s)", sender, receiver, message);
+        jc.executeUpdate(query);
+    }
+
+    // Получить историю чата
+    public synchronized HistoryEntry[] getHistory(){
+
+        ResultSet rs = jc.executeQuery("SELECT * FROM history");
+        ArrayList<HistoryEntry> al = new ArrayList<>();
+
+        if (rs != null) {
+            try {
+                while (rs.next()) {
+                    al.add(new HistoryEntry(
+                            rs.getString("sender"),
+                            rs.getString("receiver"),
+                            rs.getString("message")));
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return al.toArray(new HistoryEntry[al.size()]);
+    }
+
 }

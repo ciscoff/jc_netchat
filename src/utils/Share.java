@@ -41,6 +41,7 @@ public class Share {
     public static final String PROT_MSG_AUTH_OK             = "/authok";
     public static final String PROT_MSG_AUTH_ERROR          = "Login or password incorrect";
     public static final String PROT_MSG_AUTH_NICK_BUSSY     = "User already joined";
+    public static final String PROT_MSG_BROADCAST           = "broadcast";
 
     public static final String PROT_CMD_PREFIX              = "/";
     public static final String PROT_MSG_END                 = "/end";
