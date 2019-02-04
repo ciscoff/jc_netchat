@@ -1,0 +1,86 @@
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.TextArea?>
+
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.ScrollPane?>
+
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Label?>
+<VBox fx:controller="network.Messenger.Controller"
+      xmlns:fx="http://javafx.com/fxml"
+      stylesheets="/css/chat_style.css"
+      alignment="center" fx:id="mainFrame">
+    <HBox fx:id="closeArea" HBox.hgrow="ALWAYS" alignment="CENTER_RIGHT" prefHeight="20">
+        <Button fx:id="btnHide" onAction="#minimizeWindow" prefWidth="16" prefHeight="16"/>
+        <HBox.margin>
+            <Insets>
+                <top>2</top>
+                <right>20</right>
+                <bottom>2</bottom>
+                <left>20</left>
+            </Insets>
+        </HBox.margin>
+        <Button fx:id="btnClose" onAction="#closeWindow" prefWidth="16" prefHeight="16" cancelButton="true"/>
+        <HBox.margin>
+            <Insets>
+                <top>2</top>
+                <right>20</right>
+                <bottom>2</bottom>
+            </Insets>
+        </HBox.margin>
+    </HBox>
+    <VBox fx:id="chatArea" VBox.vgrow="ALWAYS">
+
+        <VBox spacing="10">
+            <HBox spacing="250">
+                <ImageView fx:id="imageView" layoutX="5.0" layoutY="5.0" fitHeight="40.0" fitWidth="230.0"
+                           pickOnBounds="false" preserveRatio="true">
+                    <image>
+                        <Image url="/img/gb.png"/>
+                    </image>
+                </ImageView>
+                <HBox alignment="CENTER">
+                    <ImageView fx:id="imageConnect" fitHeight="20.0" fitWidth="20.0" pickOnBounds="false" preserveRatio="true">
+                        <image>
+                            <Image url="/img/notconnect.png"/>
+                        </image>
+                    </ImageView>
+                </HBox>
+              </HBox>
+            <Separator orientation="HORIZONTAL"/>
+        </VBox>
+
+        <VBox fx:id="scrollPanel" visible="false" managed="false">
+            <ScrollPane fx:id="chatScroll" fitToWidth="true" fitToHeight="true" VBox.vgrow="ALWAYS">
+                <VBox fx:id="chatMessages" VBox.vgrow="ALWAYS"></VBox>
+            </ScrollPane>
+        </VBox>
+
+        <VBox fx:id="authPanel" VBox.vgrow="ALWAYS" alignment="CENTER">
+            <TextField promptText="Login" fx:id="loginField"/>
+            <PasswordField promptText="Password" fx:id="passwordField" onAction="#tryToAuth"/>
+            <Button text="Sign In" fx:id="btnAuth" onAction="#tryToAuth" alignment="CENTER"/>
+            <Label fx:id="lblAuthError" text="" textFill="brown" style="-fx-font-style: italic; -fx-font-weight: bold;"
+                   visible="false"/>
+        </VBox>
+
+    </VBox>
+
+    <HBox fx:id="messageArea" HBox.hgrow="ALWAYS" visible="false" managed="false">
+        <TextField fx:id="messageField" HBox.hgrow="ALWAYS" promptText="Введите сообщение..." onAction="#sendMessage"/>
+        <Button fx:id="btnSend" onAction="#sendMessage">
+            <HBox.margin>
+                <Insets>
+                    <top>5</top>
+                    <right>10</right>
+                </Insets>
+            </HBox.margin>
+        </Button>
+    </HBox>
+</VBox>
