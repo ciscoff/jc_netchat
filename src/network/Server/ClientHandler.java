@@ -47,7 +47,7 @@ public class ClientHandler implements ChatUtilizer {
                             server.subscribe(ClientHandler.this);
                             blacklist = ji.getBlackList(nickname);
                             // Отправить новому клиенту историю чата
-                            server.sendHistory(ClientHandler.this, ji.getHistory());
+                            server.sendHistory(ClientHandler.this, ji.getHistory(ClientHandler.this.nickname));
                             // Известить всех о новом клиенте
                             server.broadcastMessage(ClientHandler.this, addMetaData(" joined to chat"));
                             conversationLoop();
