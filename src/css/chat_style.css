@@ -4,6 +4,11 @@
     -fx-spacing: 10;
 }
 
+#authPanel {
+    -fx-padding: 0 70 0 70;
+    -fx-spacing: 10;
+}
+
 #chatArea {
     -fx-border-color: transparent;
     -fx-background-color: white;
@@ -11,6 +16,16 @@
     -fx-background-radius: 10;
     -fx-padding: 10;
     -fx-spacing: 10;
+}
+
+#chatScroll {
+    -fx-border-color: transparent;
+    -fx-background-color: white;
+}
+
+#chatMessages {
+    -fx-border-color: white;
+    -fx-background-color: white;
 }
 
 #closeArea {
@@ -87,6 +102,15 @@
     -fx-pref-width: 32px;
     -fx-max-height: 32px;
     -fx-max-width: 32px;
+}
+
+#btnAuth {
+    -fx-background-color: #2f4f4f;
+    -fx-text-fill: white;
+}
+
+#btnAuth:hover {
+    -fx-background-color: #2f8f4f;
 }
 
 #btnHide {
