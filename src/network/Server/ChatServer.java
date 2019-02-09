@@ -3,6 +3,9 @@ package network.Server;
 import database.HistoryEntry;
 import database.JdbcInteractor;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -28,10 +31,62 @@ public class ChatServer implements Cleaner {
         }
     }
 
+    /**
+     * Сгенерить файлы истории чата по одному для каждого клиента.
+     * Содержимое фалов одинаковое.
+     * Имя файла в формате nickX.txt
+     *
+     * @param count Количество записей в истории
+     */
+    private void generateHistory(int count) {
+        String[] nicknames = ji.getNicks();
+        String[] coloredNick = new String[nicknames.length];
+
+        System.out.println("nicknames " + nicknames.length);
+
+        // Каждому нику присвоить цвет сообщений.
+        for (int i = 0, j = 0; i < nicknames.length; i++, j++) {
+            if (j == colors.length) j = 0;
+            coloredNick[i] = nicknames[i] + SEPARATOR + colors[j];
+            System.out.println(coloredNick[i]);
+        }
+
+        // Нагенерить массив сообщений
+        String[] messages = new String[count];
+        Random randomGreeting = new Random();
+        Random randomNick = new Random();
+
+        for (int i = 0; i < messages.length; i++) {
+            messages[i] =
+                    coloredNick[randomNick.nextInt(coloredNick.length)] +
+                            SEPARATOR +
+                            greetings[randomGreeting.nextInt(greetings.length)];
+        }
+
+        // Записать сообщения в файлы
+        // Создать по одному файлу для каждого ника.
+        for (int i = 0; i < nicknames.length; i++) {
+
+            try (FileOutputStream fos = new FileOutputStream(DIR_LOCAL_HISTORY + nicknames[i] + ".txt")) {
+                fos.write(String.join("\n", messages).getBytes());
+                fos.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    /**
+     * Запуск серверной части
+     */
     public void start() {
 
         // Connect to DB
         ji = new JdbcInteractor();
+
+        // Сгенерить историю чата
+        generateHistory(100);
 
         // Start resource cleaner
         new ResourceCleaner(this);
@@ -58,14 +113,14 @@ public class ChatServer implements Cleaner {
     }
 
     /**
-     *  TODO: Этот костыль исправить !!!!!
+     * TODO: Этот костыль исправить !!!!!
      */
     boolean inHistory;
 
 
     /**
      * Отправить сообщение всем АВТОРИЗОВАННЫМ клиентам с проверкой черного списка отправителя и каждого получателя.
-     *
+     * <p>
      * Все обычные соообщения отправляются в формате "nickFrom@@color@text_message"
      * Все служебные сообщения предваряются префиксом "/", их не помещаем в history.
      * В history сохраняем всё без учета blacklist'а
@@ -77,13 +132,13 @@ public class ChatServer implements Cleaner {
         clients.entrySet().forEach((e) -> {
 
             // Отправить можно только авторизованному клиенту
-            if(e.getKey().startsWith(SOCKET_PREFIX)) return;
+            if (e.getKey().startsWith(SOCKET_PREFIX)) return;
 
             // Поместить сообщение в историю
-            if(!inHistory) {
+            if (!inHistory) {
                 // Так как сообщения отправляются в формате 'nick1@@#efe4b0;@@какой-то_текстс',
                 // то их нужно укладывать в кавычки. Иначе ошибка.
-                if(!message.startsWith(PROT_CMD_PREFIX)) {
+                if (!message.startsWith(PROT_CMD_PREFIX)) {
                     ji.toHistory(sender.getNickname(), PROT_MSG_BROADCAST, "'" + message + "'");
                     inHistory = true;
                 }
@@ -101,24 +156,24 @@ public class ChatServer implements Cleaner {
         ClientHandler chTo = clients.get(nickTo);
 
         // Отправительнь существует ?
-        if(chTo == null) return;
+        if (chTo == null) return;
 
         // Не сохраняем служебные сообщения
-        if(!message.startsWith(PROT_CMD_PREFIX)) {
+        if (!message.startsWith(PROT_CMD_PREFIX)) {
             ji.toHistory(from.getNickname(), nickTo, "'" + message + "'");
         }
 
         // Проверка черного списка
-        if(allowedToSend(from, chTo)) chTo.sendMessage(message);
+        if (allowedToSend(from, chTo)) chTo.sendMessage(message);
     }
 
     // Отправить историю чата новому клиенту
-    public synchronized void sendHistory(ClientHandler newClient, HistoryEntry[] history){
-        for(HistoryEntry entry: history) {
+    public synchronized void sendHistory(ClientHandler newClient, HistoryEntry[] history) {
+        for (HistoryEntry entry : history) {
 
             // Отправляем сообщение если отправитель не из черного списка получателя
             System.out.println("sendHistory " + entry.getFrom());
-            if(!newClient.getBlacklist().contains(entry.getFrom())) newClient.sendMessage(entry.getMsg());
+            if (!newClient.getBlacklist().contains(entry.getFrom())) newClient.sendMessage(entry.getMsg());
         }
     }
 
@@ -157,7 +212,6 @@ public class ChatServer implements Cleaner {
     }
 
     /**
-     *
      * Старт сервера
      */
     public static void main(String[] args) {

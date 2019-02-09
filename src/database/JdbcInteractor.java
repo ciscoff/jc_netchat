@@ -178,4 +178,25 @@ public class JdbcInteractor {
         return al.toArray(new HistoryEntry[al.size()]);
     }
 
+    /**
+     *
+     * @return Nicknames array
+     */
+    public String[] getNicks() {
+
+        ResultSet rs = jc.executeQuery("SELECT nickname FROM users");
+        ArrayList<String> al = new ArrayList<>();
+
+        if (rs != null) {
+            try {
+                while (rs.next()) {
+                    al.add(rs.getString("nickname"));
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return al.toArray(new String[al.size()]);
+    }
 }

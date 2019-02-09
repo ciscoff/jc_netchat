@@ -69,11 +69,20 @@ public class Share {
     public static final String URL_JDBC = "jdbc:sqlite:gbchat.db";
     public static final String JDBC_CLASS_NAME = "org.sqlite.JDBC";
 
+    public static final String DIR_LOCAL_HISTORY = "localhistory/";
+
+
     /**
      * Цвета оформления сообщений
      */
     public static final String[] colors = {"#efe4b0;", "#d2d2d2;", "#99d9ea;", "#7092be;", "#ffaec9;", "#b5e61d;", "#ffc90e;"};
     public static final String systemColor = "#ffffff;";
+    public static final String[] greetings = {
+            "Hey man", "How's it going?",
+            "What's up?", "What's new ?", "What's going on ?",
+            "Hello all !", "How's life ?", "How's your day ?",
+            "How's your day going ?", "Good morning",
+            "Good afternoon", "Good evening"};
 
     public static String currentTime() {
         return new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
