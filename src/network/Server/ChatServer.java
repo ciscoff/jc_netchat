@@ -67,7 +67,7 @@ public class ChatServer implements Cleaner {
         // Создать по одному файлу для каждого ника.
         for (int i = 0; i < nicknames.length; i++) {
 
-            try (FileOutputStream fos = new FileOutputStream(DIR_LOCAL_HISTORY + nicknames[i] + ".txt")) {
+                try (FileOutputStream fos = new FileOutputStream(DIR_LOCAL_HISTORY + nicknames[i] + ".txt")) {
                 fos.write(String.join("\n", messages).getBytes());
                 fos.flush();
             } catch (IOException e) {

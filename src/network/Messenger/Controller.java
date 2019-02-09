@@ -27,6 +27,7 @@ import network.ChatUtilizer;
 import java.io.*;
 import java.net.Socket;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.ResourceBundle;
 import java.util.TreeSet;
@@ -258,6 +259,8 @@ public class Controller implements Initializable, ChatUtilizer {
                     try {
                         // Цикл авторизации
                         Controller.this.nickname = authenticationLoop();
+                        // Показать историю чата из файла
+                        showHistory();
                         // Цикл работы в чате
                         conversationLoop();
                     } catch (IOException e) {
@@ -401,5 +404,32 @@ public class Controller implements Initializable, ChatUtilizer {
         timelineY.setCycleCount(4);
         timelineY.setAutoReverse(false);
         timelineY.play();
+    }
+
+    /**
+     * Прочитать историю чата из локального файла
+     */
+    private void showHistory() {
+
+        try (FileReader fr = new FileReader(DIR_LOCAL_HISTORY + nickname + ".txt");
+             BufferedReader br = new BufferedReader(fr)) {
+            String message;
+
+            while ((message = br.readLine()) != null) {
+                String[] parts = message.split(SEPARATOR, 3);
+                // "Not on FX application thread"
+                Platform.runLater(() -> {
+                    /**
+                     * equals проверяет имя отправителя с именем текущего клиента.
+                     * Если имена совпадают, то вернулось свое собственное сообщение и его
+                     * нужно отобразить с одной стороны окна чата, если различаются, то сообщение
+                     * чужое и его нужно поместить с другой стороны
+                     */
+                    stickMessage(parts[PROT_NICK_FROM].equals(nickname), parts[PROT_COLOR], parts[PROT_NICK_FROM], parts[PROT_MSG_BODY]);
+                });
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
