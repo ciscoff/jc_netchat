@@ -70,6 +70,7 @@ public class Share {
     public static final String JDBC_CLASS_NAME = "org.sqlite.JDBC";
 
     public static final String DIR_LOCAL_HISTORY = "localhistory/";
+    public static final String DIR_FILE_EXT = ".txt";
 
 
     /**

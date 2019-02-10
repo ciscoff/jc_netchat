@@ -42,13 +42,10 @@ public class ChatServer implements Cleaner {
         String[] nicknames = ji.getNicks();
         String[] coloredNick = new String[nicknames.length];
 
-        System.out.println("nicknames " + nicknames.length);
-
         // Каждому нику присвоить цвет сообщений.
         for (int i = 0, j = 0; i < nicknames.length; i++, j++) {
             if (j == colors.length) j = 0;
             coloredNick[i] = nicknames[i] + SEPARATOR + colors[j];
-            System.out.println(coloredNick[i]);
         }
 
         // Нагенерить массив сообщений
@@ -67,7 +64,11 @@ public class ChatServer implements Cleaner {
         // Создать по одному файлу для каждого ника.
         for (int i = 0; i < nicknames.length; i++) {
 
-                try (FileOutputStream fos = new FileOutputStream(DIR_LOCAL_HISTORY + nicknames[i] + ".txt")) {
+            File file = new File(DIR_LOCAL_HISTORY + nicknames[i] + DIR_FILE_EXT);
+
+            if(file.exists()) continue;
+
+            try (FileOutputStream fos = new FileOutputStream(file)) {
                 fos.write(String.join("\n", messages).getBytes());
                 fos.flush();
             } catch (IOException e) {
@@ -136,8 +137,8 @@ public class ChatServer implements Cleaner {
 
             // Поместить сообщение в историю
             if (!inHistory) {
-                // Так как сообщения отправляются в формате 'nick1@@#efe4b0;@@какой-то_текстс',
-                // то их нужно укладывать в кавычки. Иначе ошибка.
+                // Так как сообщения отправляются в формате 'nick1@@#efe4b0;@@какой-то_текст',
+                // то их нужно укладывать в кавычки. Иначе ошибка sql.
                 if (!message.startsWith(PROT_CMD_PREFIX)) {
                     ji.toHistory(sender.getNickname(), PROT_MSG_BROADCAST, "'" + message + "'");
                     inHistory = true;
@@ -151,7 +152,9 @@ public class ChatServer implements Cleaner {
         });
     }
 
-    // Отправить конкретному получателю
+    /**
+     * Отправить конкретному получателю
+     */
     public synchronized void sendTo(ClientHandler from, String nickTo, String message) {
         ClientHandler chTo = clients.get(nickTo);
 
@@ -167,7 +170,9 @@ public class ChatServer implements Cleaner {
         if (allowedToSend(from, chTo)) chTo.sendMessage(message);
     }
 
-    // Отправить историю чата новому клиенту
+    /**
+     * Отправить историю чата новому клиенту
+     */
     public synchronized void sendHistory(ClientHandler newClient, HistoryEntry[] history) {
         for (HistoryEntry entry : history) {
 
@@ -177,7 +182,9 @@ public class ChatServer implements Cleaner {
         }
     }
 
-    // Проверить, что оба клиента не блокируют друг друга
+    /**
+     * Проверить, что оба клиента не блокируют друг друга
+     */
     private boolean allowedToSend(ClientHandler sender, ClientHandler recepient) {
 
         if ((sender.getBlacklist().contains(recepient.getNickname())) ||
@@ -186,6 +193,12 @@ public class ChatServer implements Cleaner {
         return true;
     }
 
+    /**
+     * Клиент уже в чате ?
+     *
+     * @param nickname
+     * @return
+     */
     public synchronized boolean isNickBusy(String nickname) {
         return clients.get(nickname) != null;
     }
@@ -205,7 +218,9 @@ public class ChatServer implements Cleaner {
         clients.remove((nick != null) ? nick : ch.getConnectId());
     }
 
-    // Выделить авторизованному клиенту цвет фона сообщений
+    /**
+     * Выделить авторизованному клиенту цвет фона сообщений
+     */
     public String assignColor() {
         if (colorIdx == colors.length) colorIdx = 0;
         return colors[colorIdx++];

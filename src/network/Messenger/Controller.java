@@ -139,7 +139,45 @@ public class Controller implements Initializable, ChatUtilizer {
         }
     }
 
-    // Цикл аутентификации
+    /**
+     * Подключение к серверу, аутентификация, работа в чате
+     */
+    private void connect() {
+        try {
+            socket = new Socket(HOST, PORT);
+            in = new DataInputStream(socket.getInputStream());
+            out = new DataOutputStream(socket.getOutputStream());
+            imageConnect.setImage(new Image("/img/notauth.png"));
+
+            Thread receiver = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        // Цикл авторизации
+                        Controller.this.nickname = authenticationLoop();
+                        // Показать историю чата из файла
+                        showLocalHistory();
+                        // Цикл работы в чате
+                        conversationLoop();
+                    } catch (IOException e) {
+                        System.out.println("Connection closed");
+                    } finally {
+                        closeResources(in, out, socket);
+                    }
+                }
+            });
+            receiver.setDaemon(true);
+            receiver.start();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * Цикл аутентификации
+     */
     @Override
     public String authenticationLoop() throws IOException {
         String nickname = null;
@@ -174,7 +212,9 @@ public class Controller implements Initializable, ChatUtilizer {
         return nickname;
     }
 
-    // Цикл работы в чате
+    /**
+     * Цикл работы в чате
+     */
     @Override
     public void conversationLoop() throws IOException {
 
@@ -185,6 +225,9 @@ public class Controller implements Initializable, ChatUtilizer {
                 commandProcessor(message);
             } else {
                 String[] parts = message.split(SEPARATOR, 3);
+
+                // Сохранить в локальном файле
+                saveLocalHistory(message);
 
                 // "Not on FX application thread"
                 Platform.runLater(() -> {
@@ -200,6 +243,11 @@ public class Controller implements Initializable, ChatUtilizer {
         }
     }
 
+    /**
+     * Обработка команд
+     * @param command команда
+     * @throws IOException
+     */
     @Override
     public void commandProcessor(String command) throws IOException {
 
@@ -243,39 +291,6 @@ public class Controller implements Initializable, ChatUtilizer {
                 message = raw;
         }
         return message;
-    }
-
-    // Подключение к серверу, аутентификация, работа в чате
-    private void connect() {
-        try {
-            socket = new Socket(HOST, PORT);
-            in = new DataInputStream(socket.getInputStream());
-            out = new DataOutputStream(socket.getOutputStream());
-            imageConnect.setImage(new Image("/img/notauth.png"));
-
-            Thread receiver = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        // Цикл авторизации
-                        Controller.this.nickname = authenticationLoop();
-                        // Показать историю чата из файла
-                        showHistory();
-                        // Цикл работы в чате
-                        conversationLoop();
-                    } catch (IOException e) {
-                        System.out.println("Connection closed");
-                    } finally {
-                        closeResources(in, out, socket);
-                    }
-                }
-            });
-            receiver.setDaemon(true);
-            receiver.start();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -338,7 +353,7 @@ public class Controller implements Initializable, ChatUtilizer {
     /**
      * Сформировать стикер с иконкой сообщения
      */
-    public HBox prepareSticker(String backgroundColor) {
+    private HBox prepareSticker(String backgroundColor) {
         String iconPath = "file:icons/chat24x24.png";
         ImageView imageView = new ImageView(new Image(iconPath));
 
@@ -355,7 +370,9 @@ public class Controller implements Initializable, ChatUtilizer {
         return iconHb;
     }
 
-    // Включение/Отключение панелей окна
+    /**
+     * Включение/Отключение панелей окна
+     */
     private void setAuthorized(boolean isAuthorized) {
         this.isAuthorized = isAuthorized;
         authPanel.setVisible(!isAuthorized);
@@ -366,8 +383,10 @@ public class Controller implements Initializable, ChatUtilizer {
         messageArea.setManaged(isAuthorized);
     }
 
-    // Втряхнуть окно
-    public void shakeFrame() {
+    /**
+     * Втряхнуть окно
+     */
+    private void shakeFrame() {
 
         Stage primaryStage = (Stage) mainFrame.getScene().getWindow();
         shakeFlagX = true;
@@ -407,11 +426,25 @@ public class Controller implements Initializable, ChatUtilizer {
     }
 
     /**
+     * Сохранить в файле истории чата
+     */
+    private void saveLocalHistory(String message) {
+
+        try (FileWriter fr = new FileWriter(DIR_LOCAL_HISTORY + nickname + DIR_FILE_EXT, true)) {
+            fr.append("\n" + message);
+            fr.flush();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Прочитать историю чата из локального файла
      */
-    private void showHistory() {
+    private void showLocalHistory() {
 
-        try (FileReader fr = new FileReader(DIR_LOCAL_HISTORY + nickname + ".txt");
+        try (FileReader fr = new FileReader(DIR_LOCAL_HISTORY + nickname + DIR_FILE_EXT);
              BufferedReader br = new BufferedReader(fr)) {
             String message;
 
@@ -419,12 +452,6 @@ public class Controller implements Initializable, ChatUtilizer {
                 String[] parts = message.split(SEPARATOR, 3);
                 // "Not on FX application thread"
                 Platform.runLater(() -> {
-                    /**
-                     * equals проверяет имя отправителя с именем текущего клиента.
-                     * Если имена совпадают, то вернулось свое собственное сообщение и его
-                     * нужно отобразить с одной стороны окна чата, если различаются, то сообщение
-                     * чужое и его нужно поместить с другой стороны
-                     */
                     stickMessage(parts[PROT_NICK_FROM].equals(nickname), parts[PROT_COLOR], parts[PROT_NICK_FROM], parts[PROT_MSG_BODY]);
                 });
             }
