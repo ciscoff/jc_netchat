@@ -5,6 +5,7 @@ public class ChatMessage extends Message {
     private final String color;
     private final String from;
     private final String to;
+    private final long time;
 
     public ChatMessage(String message, String color, String from, String to) {
         super.type = MessageType.UNICAST;
@@ -12,6 +13,7 @@ public class ChatMessage extends Message {
         this.color = color;
         this.from = from;
         this.to = to;
+        this.time = System.currentTimeMillis();
     }
 
     public String getMessage() {
@@ -28,5 +30,8 @@ public class ChatMessage extends Message {
 
     public String getFrom() {
         return from;
+    }
+    public long getTime() {
+        return time;
     }
 }
