@@ -1,11 +1,14 @@
 package network.Server;
 
 import database.JdbcInteractor;
+import domain.ChatAuthRequest;
+import domain.ChatAuthResponse;
+import domain.Message;
+import domain.MessageType;
 import network.ChatUtilizer;
+import utils.AuthResult;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.util.*;
 
@@ -24,6 +27,9 @@ public class ClientHandler implements ChatUtilizer {
     private DataInputStream is = null;
     private DataOutputStream os = null;
 
+    private ObjectOutputStream oos = null;
+    private ObjectInputStream ois = null;
+
     public ClientHandler(ChatServer server, Socket socket, JdbcInteractor ji) {
 
         try {
@@ -33,6 +39,8 @@ public class ClientHandler implements ChatUtilizer {
             this.ji = ji;
             this.is = new DataInputStream(socket.getInputStream());
             this.os = new DataOutputStream(socket.getOutputStream());
+            this.ois = new ObjectInputStream(socket.getInputStream());
+            this.oos = new ObjectOutputStream(socket.getOutputStream());
             this.startTime = System.currentTimeMillis();
             this.connectId = getConnectId();
 
@@ -54,7 +62,10 @@ public class ClientHandler implements ChatUtilizer {
                         }
                     } catch (IOException e) {
                         System.out.println("Client " + nickname + " disconnected");
-                    } finally {
+                    } catch (ClassNotFoundException e) {
+                        System.out.println("Incorrect message type");
+                    }
+                    finally {
                         server.unsubscribe(ClientHandler.this);
                         closeResources(is, os, socket);
                     }
@@ -68,29 +79,56 @@ public class ClientHandler implements ChatUtilizer {
 
     // Цикл аутентификации
     @Override
-    public String authenticationLoop() throws IOException {
-        String message = null;
+    public String authenticationLoop() throws IOException, ClassNotFoundException {
         String nick = null;
+        Message message;
 
-        while ((message = is.readUTF()) != null) {
-            if (message.matches(REGEX_AUTH) /* /auth login password */) {
-                String[] parts = message.split("\\s", 3);
-                nick = ji.getNickByLoginPass(parts[PROT_LOGIN], parts[PROT_PASSWORD]);
-                if (nick != null) {
-                    if (!server.isNickBusy(nick)) {
-                        // Сообщить об успешной аутентификации и отправить nickname
-                        sendMessage(PROT_MSG_AUTH_OK + SEPARATOR + nick);
-                        break;
+        while ((message = (Message)ois.readObject()) != null) {
+
+            switch(message.type){
+                case AUTH_REQUEST:
+                    ChatAuthRequest request = (ChatAuthRequest)message;
+                    nick = ji.getNickByLoginPass(request.getLogin(), request.getPassword());
+                    if (nick != null) {
+                        if (!server.isNickBusy(nick)) {
+                            // Сообщить об успешной аутентификации и отправить nickname
+                            sendMessage(new ChatAuthResponse(AuthResult.AUTH_OK, getSessionId(), nick));
+                            break;
+                        } else {
+                            sendMessage(new ChatAuthResponse(AuthResult.NICK_BUSSY, 0, null));
+                        }
                     } else {
-                        sendMessage(PROT_MSG_AUTH_NICK_BUSSY);
+                        sendMessage(new ChatAuthResponse(AuthResult.AUTH_ERROR, 0, nick));
                     }
-                } else {
-                    sendMessage(PROT_MSG_AUTH_ERROR);
-                }
+                    break;
             }
         }
         return nick;
     }
+
+//    public String authenticationLoop() throws IOException {
+//        String message = null;
+//        String nick = null;
+//
+//        while ((message = is.readUTF()) != null) {
+//            if (message.matches(REGEX_AUTH) /* /auth login password */) {
+//                String[] parts = message.split("\\s", 3);
+//                nick = ji.getNickByLoginPass(parts[PROT_LOGIN], parts[PROT_PASSWORD]);
+//                if (nick != null) {
+//                    if (!server.isNickBusy(nick)) {
+//                        // Сообщить об успешной аутентификации и отправить nickname
+//                        sendMessage(PROT_MSG_AUTH_OK + SEPARATOR + nick);
+//                        break;
+//                    } else {
+//                        sendMessage(PROT_MSG_AUTH_NICK_BUSSY);
+//                    }
+//                } else {
+//                    sendMessage(PROT_MSG_AUTH_ERROR);
+//                }
+//            }
+//        }
+//        return nick;
+//    }
 
     // Цикл обработки сообщений
     @Override
@@ -164,6 +202,15 @@ public class ClientHandler implements ChatUtilizer {
     }
 
     // Отправить сообщение в сокет
+    public void sendMessage(Message message) {
+        try {
+            oos.writeObject(message);
+            oos.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void sendMessage(String message) {
         try {
             os.writeUTF(message);
@@ -181,6 +228,11 @@ public class ClientHandler implements ChatUtilizer {
     // Уникальный ID
     public String getConnectId() {
         return socket.getInetAddress() + SEPARATOR + socket.getPort();
+    }
+
+    // Сгенерить ID сессии
+    private int getSessionId() {
+        return this.hashCode();
     }
 
 

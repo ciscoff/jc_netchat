@@ -3,7 +3,7 @@ package network;
 import java.io.IOException;
 
 public interface ChatUtilizer {
-    String authenticationLoop() throws IOException;
+    String authenticationLoop() throws IOException, ClassNotFoundException;
     void conversationLoop() throws IOException;
     void commandProcessor(String s) throws IOException;
 }

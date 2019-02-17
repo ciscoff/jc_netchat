@@ -5,6 +5,7 @@
 
 package network.Messenger;
 
+import domain.ChatAuthRequest;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -38,6 +39,8 @@ public class Controller implements Initializable, ChatUtilizer {
     boolean isAuthorized;
     DataOutputStream out;
     DataInputStream in;
+    ObjectOutputStream oos = null;
+    ObjectInputStream ois = null;
     Socket socket;
     String nickname;
 
@@ -124,7 +127,8 @@ public class Controller implements Initializable, ChatUtilizer {
         if (socket == null || socket.isClosed()) connect();
 
         try {
-            out.writeUTF(PROT_MSG_AUTH + " " + loginField.getText() + " " + passwordField.getText());
+            oos.writeObject(new ChatAuthRequest(loginField.getText(), passwordField.getText()));
+//            out.writeUTF(PROT_MSG_AUTH + " " + loginField.getText() + " " + passwordField.getText());
 
             /**
              * Нужно добавить обработку ситуации отправки пустой формы !!!
@@ -137,6 +141,24 @@ public class Controller implements Initializable, ChatUtilizer {
             e.printStackTrace();
         }
     }
+
+//    public void tryToAuth() {
+//        if (socket == null || socket.isClosed()) connect();
+//
+//        try {
+//            out.writeUTF(PROT_MSG_AUTH + " " + loginField.getText() + " " + passwordField.getText());
+//
+//            /**
+//             * Нужно добавить обработку ситуации отправки пустой формы !!!
+//             */
+//
+//            lblAuthError.setVisible(false);
+//            loginField.clear();
+//            passwordField.clear();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     // Цикл аутентификации
     @Override
@@ -250,6 +272,10 @@ public class Controller implements Initializable, ChatUtilizer {
             socket = new Socket(HOST, PORT);
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
+
+            ois = new ObjectInputStream(socket.getInputStream());
+            oos = new ObjectOutputStream(socket.getOutputStream());
+
             imageConnect.setImage(new Image("/img/notauth.png"));
 
             Thread receiver = new Thread(new Runnable() {
