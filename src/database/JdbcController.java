@@ -26,7 +26,7 @@ public class JdbcController {
         public static JdbcController instance = new JdbcController();
     }
 
-    public static JdbcController getIdbc() {
+    public static JdbcController getJdbc() {
         return JdbcControllerHolder.instance;
     }
 

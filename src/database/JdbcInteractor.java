@@ -11,7 +11,7 @@ public class JdbcInteractor {
 
     public JdbcInteractor() {
 
-        this.jc = JdbcController.getIdbc();
+        this.jc = JdbcController.getJdbc();
         clearHistory();
     }
 
