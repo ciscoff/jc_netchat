@@ -45,7 +45,7 @@ public class Share {
 
     public static final String PROT_CMD_PREFIX              = "/";
     public static final String PROT_MSG_END                 = "/end";
-    public static final String PROT_MSG_TO                  = "/w";
+    public static final String PROT_MSG_TO                  = "/to";
     public static final String PROT_MSG_BLOCK               = "/block";
     public static final String PROT_MSG_UNBLOCK             = "/unblock";
     public static final String PROT_MSG_IDLE                = "/idle";
@@ -95,5 +95,10 @@ public class Share {
 
     public static long msecToSec(long msec) {
         return Math.abs(msec / 1000);
+    }
+
+
+    public static void p(String s) {
+        System.out.println(s);
     }
 }

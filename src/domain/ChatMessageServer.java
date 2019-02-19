@@ -1,13 +1,13 @@
 package domain;
 
-public class ChatMessage extends Message {
+public class ChatMessageServer extends Message {
     private final String message;
     private final String color;
     private final String from;
     private final String to;
     private final long time;
 
-    public ChatMessage(String message, String color, String from, String to) {
+    public ChatMessageServer(String message, String color, String from, String to) {
         super.type = MessageType.UNICAST;
         this.message = message;
         this.color = color;

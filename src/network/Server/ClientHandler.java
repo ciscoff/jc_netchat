@@ -37,8 +37,8 @@ public class ClientHandler implements ChatUtilizer {
             this.server = server;
             this.socket = socket;
             this.ji = ji;
-            this.is = new DataInputStream(socket.getInputStream());
-            this.os = new DataOutputStream(socket.getOutputStream());
+//            this.is = new DataInputStream(socket.getInputStream());
+//            this.os = new DataOutputStream(socket.getOutputStream());
             this.ois = new ObjectInputStream(socket.getInputStream());
             this.oos = new ObjectOutputStream(socket.getOutputStream());
             this.startTime = System.currentTimeMillis();
@@ -83,7 +83,12 @@ public class ClientHandler implements ChatUtilizer {
         String nick = null;
         Message message;
 
+        p("authenticationLoop");
+
+
         while ((message = (Message)ois.readObject()) != null) {
+
+            p("authenticationLoop " + message.type);
 
             switch(message.type){
                 case AUTH_REQUEST:
@@ -92,13 +97,13 @@ public class ClientHandler implements ChatUtilizer {
                     if (nick != null) {
                         if (!server.isNickBusy(nick)) {
                             // Сообщить об успешной аутентификации и отправить nickname
-                            sendMessage(new ChatAuthResponse(AuthResult.AUTH_OK, getSessionId(), nick));
+                            sendMessage(new ChatAuthResponse(AuthResult.AUTH_OK, getSessionId(), nick, Optional.empty()));
                             break;
                         } else {
-                            sendMessage(new ChatAuthResponse(AuthResult.NICK_BUSSY, 0, null));
+                            sendMessage(new ChatAuthResponse(AuthResult.NICK_BUSSY, 0, null, Optional.of("Nick is bussy")));
                         }
                     } else {
-                        sendMessage(new ChatAuthResponse(AuthResult.AUTH_ERROR, 0, nick));
+                        sendMessage(new ChatAuthResponse(AuthResult.AUTH_ERROR, 0, nick, Optional.of("Login or password incorrest")));
                     }
                     break;
             }

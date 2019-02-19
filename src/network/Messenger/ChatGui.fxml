@@ -73,8 +73,8 @@
     </VBox>
 
     <HBox fx:id="messageArea" HBox.hgrow="ALWAYS" visible="false" managed="false">
-        <TextField fx:id="messageField" HBox.hgrow="ALWAYS" promptText="Введите сообщение..." onAction="#sendMessage"/>
-        <Button fx:id="btnSend" onAction="#sendMessage">
+        <TextField fx:id="messageField" HBox.hgrow="ALWAYS" promptText="Введите сообщение..." onAction="#onMessage"/>
+        <Button fx:id="btnSend" onAction="#onMessage">
             <HBox.margin>
                 <Insets>
                     <top>5</top>

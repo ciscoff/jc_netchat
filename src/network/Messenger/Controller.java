@@ -5,7 +5,7 @@
 
 package network.Messenger;
 
-import domain.ChatAuthRequest;
+import domain.*;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -29,6 +29,7 @@ import java.io.*;
 import java.net.Socket;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.TreeSet;
 
@@ -99,16 +100,15 @@ public class Controller implements Initializable, ChatUtilizer {
         });
     }
 
+    /**
+     * Event handler for 'messageField' and 'btnSend'
+     */
     @FXML
-    public void sendMessage() {
-
-        try {
-            out.writeUTF(formatRaw(messageField.getText()));
-            messageField.clear();
-            messageField.requestFocus();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void onMessage() {
+        p("onMessage");
+        //sendMessage(getClassified(messageField.getText()));
+        messageField.clear();
+        messageField.requestFocus();
     }
 
     @FXML
@@ -126,21 +126,58 @@ public class Controller implements Initializable, ChatUtilizer {
     public void tryToAuth() {
         if (socket == null || socket.isClosed()) connect();
 
+        p("tryToAuth");
+//        sendMessage(new ChatAuthRequest(loginField.getText(), passwordField.getText()));
+
+        /**
+         * Нужно добавить обработку ситуации отправки пустой формы !!!
+         */
+
+        lblAuthError.setVisible(false);
+        loginField.clear();
+        passwordField.clear();
+    }
+
+
+    /**
+     * TODO: Подключение к серверу, аутентификация, работа в чате
+     */
+    private void connect() {
+        p("connect");
         try {
-            oos.writeObject(new ChatAuthRequest(loginField.getText(), passwordField.getText()));
-//            out.writeUTF(PROT_MSG_AUTH + " " + loginField.getText() + " " + passwordField.getText());
+            socket = new Socket(HOST, PORT);
+            p("connect: connected");
+//            in = new DataInputStream(socket.getInputStream());
+//            out = new DataOutputStream(socket.getOutputStream());
 
-            /**
-             * Нужно добавить обработку ситуации отправки пустой формы !!!
-             */
+            oos = new ObjectOutputStream(socket.getOutputStream());
+            ois = new ObjectInputStream(socket.getInputStream());
 
-            lblAuthError.setVisible(false);
-            loginField.clear();
-            passwordField.clear();
+            imageConnect.setImage(new Image("/img/notauth.png"));
+
+            Thread receiver = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        // Цикл авторизации
+                        Controller.this.nickname = authenticationLoop();
+                        // Цикл работы в чате
+                        conversationLoop();
+                    } catch (IOException e) {
+                        System.out.println("Connection closed");
+                    } finally {
+                        closeResources(in, out, socket);
+                    }
+                }
+            });
+            receiver.setDaemon(true);
+            receiver.start();
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
 
 //    public void tryToAuth() {
 //        if (socket == null || socket.isClosed()) connect();
@@ -163,36 +200,76 @@ public class Controller implements Initializable, ChatUtilizer {
     // Цикл аутентификации
     @Override
     public String authenticationLoop() throws IOException {
+        p("authenticationLoop");
+        boolean authorized = false;
         String nickname = null;
 
-        while (true) {
-            String reply = in.readUTF();
+        while (!authorized) {
+            try {
+                Message message = (Message) ois.readObject();
+                if (message.type == MessageType.AUTH_RESPONSE) {
+                    switch (((ChatAuthResponse) message).getResponse()) {
+                        case AUTH_OK:
+                            imageConnect.setImage(new Image("/img/connected.png"));
+                            nickname = ((ChatAuthResponse) message).getNick();
+                            authorized = true;
+                            setAuthorized(authorized);
+                            break;
+                        case AUTH_ERROR:
+                        case NICK_BUSSY:
+                            Platform.runLater(() -> {
+                                        lblAuthError.setText(((ChatAuthResponse) message).getMessage());
+                                        lblAuthError.setPadding(new Insets(5));
+                                        lblAuthError.setStyle("-fx-text-fill: #828282;" +
+                                                "-fx-border-width: 2;" +
+                                                "-fx-border-radius: 5;" +
+                                                "-fx-border-color: white;" +
+                                                "-fx-background-radius: 0;" +
+                                                "-fx-background-radius: 5;");
+                                        lblAuthError.setVisible(true);
+                                        shakeFrame();
+                                    }
+                            );
+                            break;
+                    }
+                }
 
-            if (reply.startsWith(PROT_MSG_AUTH_OK)) {
-                imageConnect.setImage(new Image("/img/connected.png"));
-                String[] parts = reply.split(SEPARATOR);
-                nickname = parts[PROT_MY_NICK];
-                setAuthorized(true);
-                break;
-            } else if (reply.startsWith(PROT_CMD_PREFIX)) {
-                commandProcessor(reply);
-            } else {
-                Platform.runLater(() -> {
-                            lblAuthError.setText(reply);
-                            lblAuthError.setPadding(new Insets(5));
-                            lblAuthError.setStyle("-fx-text-fill: #828282;" +
-                                    "-fx-border-width: 2;" +
-                                    "-fx-border-radius: 5;" +
-                                    "-fx-border-color: white;" +
-                                    "-fx-background-radius: 0;" +
-                                    "-fx-background-radius: 5;");
-                            lblAuthError.setVisible(true);
-                            shakeFrame();
-                        }
-                );
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
             }
         }
+
         return nickname;
+
+
+//            String reply = in.readUTF();
+//
+//            if (reply.startsWith(PROT_MSG_AUTH_OK)) {
+//                imageConnect.setImage(new Image("/img/connected.png"));
+//                String[] parts = reply.split(SEPARATOR);
+//                nickname = parts[PROT_MY_NICK];
+//                setAuthorized(true);
+//                break;
+//            } else if (reply.startsWith(PROT_CMD_PREFIX)) {
+//                commandProcessor(reply);
+//            } else {
+//                Platform.runLater(() -> {
+//                            lblAuthError.setText(reply);
+//                            lblAuthError.setPadding(new Insets(5));
+//                            lblAuthError.setStyle("-fx-text-fill: #828282;" +
+//                                    "-fx-border-width: 2;" +
+//                                    "-fx-border-radius: 5;" +
+//                                    "-fx-border-color: white;" +
+//                                    "-fx-background-radius: 0;" +
+//                                    "-fx-background-radius: 5;");
+//                            lblAuthError.setVisible(true);
+//                            shakeFrame();
+//                        }
+//                );
+//            }
+//        }
+
+
     }
 
     // Цикл работы в чате
@@ -247,59 +324,54 @@ public class Controller implements Initializable, ChatUtilizer {
     }
 
     /**
+     *  Классифицировать введенное сообщение и упаковать его в соотв инстанс
+     */
+    private Message getClassified(String raw) {
+        // Простое сообщение
+        if(!raw.startsWith(PROT_CMD_PREFIX))
+            return new ChatMessageClient(MessageType.BROADCAST, raw, nickname, Optional.empty());
+
+        Message message = null;
+
+        String[] parts = raw.split("\\s", 2);
+
+        // Сообщения с префиксами, например /to nickX Hello all !
+        switch(parts[0]) {
+            case PROT_MSG_TO:       // nickX Hello all !
+                parts = parts[1].split("\\s", 2);
+                message = new ChatMessageClient(MessageType.UNICAST, parts[1], nickname, Optional.of(parts[0]));
+                break;
+            case PROT_MSG_BLOCK:    // nick1 nick2
+                message = new ChatNotify(NotifyType.BLOCK, parts[1]);
+                break;
+            case PROT_MSG_UNBLOCK:  // nick1 nick2
+                message = new ChatNotify(NotifyType.UNBLOCK, parts[1]);
+                break;
+        }
+
+        return message;
+    }
+
+    /**
      * Превратить строку вида:
      * /cmd nickTo Hello world !
      * в отформатированную строку вида:
      * /cmd@@nickTo@@Hello world !
      */
-    private String formatRaw(String raw) {
-        String[] parts = raw.split("\\s", 3);
-        String message = null;
+//    private String formatRaw(String raw) {
+//        String[] parts = raw.split("\\s", 3);
+//        String message = null;
+//
+//        switch (parts[0]) {
+//            case PROT_MSG_TO:   // /w nick_to message text
+//                message = parts[PROT_CMD_IDX] + SEPARATOR + parts[PROT_NICK_TO] + SEPARATOR + parts[PROT_MSG_BODY];
+//                break;
+//            default:
+//                message = raw;
+//        }
+//        return message;
+//    }
 
-        switch (parts[0]) {
-            case PROT_MSG_TO:   // /w nick_to message text
-                message = parts[PROT_CMD_IDX] + SEPARATOR + parts[PROT_NICK_TO] + SEPARATOR + parts[PROT_MSG_BODY];
-                break;
-            default:
-                message = raw;
-        }
-        return message;
-    }
-
-    // Подключение к серверу, аутентификация, работа в чате
-    private void connect() {
-        try {
-            socket = new Socket(HOST, PORT);
-            in = new DataInputStream(socket.getInputStream());
-            out = new DataOutputStream(socket.getOutputStream());
-
-            ois = new ObjectInputStream(socket.getInputStream());
-            oos = new ObjectOutputStream(socket.getOutputStream());
-
-            imageConnect.setImage(new Image("/img/notauth.png"));
-
-            Thread receiver = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        // Цикл авторизации
-                        Controller.this.nickname = authenticationLoop();
-                        // Цикл работы в чате
-                        conversationLoop();
-                    } catch (IOException e) {
-                        System.out.println("Connection closed");
-                    } finally {
-                        closeResources(in, out, socket);
-                    }
-                }
-            });
-            receiver.setDaemon(true);
-            receiver.start();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     /**
      * Отобразить сообщение
@@ -428,4 +500,16 @@ public class Controller implements Initializable, ChatUtilizer {
         timelineY.setAutoReverse(false);
         timelineY.play();
     }
+
+    /**
+     * TODO: Передать сообщение на сервер
+     */
+    private void sendMessage(Message message) {
+        try {
+            oos.writeObject(message);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
