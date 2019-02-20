@@ -10,10 +10,10 @@ public class ChatMessageClient extends Message {
 
     public ChatMessageClient(MessageType type, String message, String from, String to) {
         super.type = type;
+        this.time = System.currentTimeMillis();
+        this.to = (type == MessageType.UNICAST_CLIENT) ? to : null;
         this.message = message;
         this.from = from;
-        this.to = to;
-        this.time = System.currentTimeMillis();
     }
 
     public String getMessage() {

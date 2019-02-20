@@ -2,6 +2,7 @@ package network.Server;
 
 import database.HistoryEntry;
 import database.JdbcInteractor;
+import domain.ChatMessageServer;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -19,6 +20,8 @@ public class ChatServer implements Cleaner {
     public void scheduledCleaning() {
         Iterator it = clients.entrySet().iterator();
 
+        // Если клиент находится в состоянии простоя, то удаляем его их HashMap.
+        // Удаление выполняем через Iterator.
         while (it.hasNext()) {
             Map.Entry<String, ClientHandler> pair = (Map.Entry) it.next();
 
@@ -28,6 +31,9 @@ public class ChatServer implements Cleaner {
         }
     }
 
+    /**
+     * Старт потока сервера
+     */
     public void start() {
 
         // Connect to DB
@@ -71,7 +77,7 @@ public class ChatServer implements Cleaner {
      * В history сохраняем всё без учета blacklist'а
      */
 
-    public synchronized void broadcastMessage(ClientHandler sender, String message) {
+    public synchronized void broadcastMessage(ClientHandler sender, ChatMessageServer message) {
         inHistory = false;
 
         clients.entrySet().forEach((e) -> {
@@ -80,14 +86,14 @@ public class ChatServer implements Cleaner {
             if(e.getKey().startsWith(SOCKET_PREFIX)) return;
 
             // Поместить сообщение в историю
-            if(!inHistory) {
-                // Так как сообщения отправляются в формате 'nick1@@#efe4b0;@@какой-то_текстс',
-                // то их нужно укладывать в кавычки. Иначе ошибка.
-                if(!message.startsWith(PROT_CMD_PREFIX)) {
-                    ji.toHistory(sender.getNickname(), PROT_MSG_BROADCAST, "'" + message + "'");
-                    inHistory = true;
-                }
-            }
+//            if(!inHistory) {
+//                // Так как сообщения отправляются в формате 'nick1@@#efe4b0;@@какой-то_текстс',
+//                // то их нужно укладывать в кавычки. Иначе ошибка.
+//                if(!message.startsWith(PROT_CMD_PREFIX)) {
+//                    ji.toHistory(sender.getNickname(), PROT_MSG_BROADCAST, "'" + message + "'");
+//                    inHistory = true;
+//                }
+//            }
 
             // Проверить черный список и отправить
             if (allowedToSend(sender, e.getValue())) {

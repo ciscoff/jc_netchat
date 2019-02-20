@@ -9,25 +9,22 @@ public class ChatMessageServer extends Message {
 
     public ChatMessageServer(MessageType type, String message, String color, String from, String to) {
         super.type = type;
+        this.to = type == MessageType.UNICAST_SERVER ? to : null;
+        this.time = System.currentTimeMillis();
         this.message = message;
         this.color = color;
         this.from = from;
-        this.to = to;
-        this.time = System.currentTimeMillis();
     }
 
     public String getMessage() {
         return message;
     }
-
     public String getColor() {
         return color;
     }
-
     public String getTo() {
         return to;
     }
-
     public String getFrom() {
         return from;
     }

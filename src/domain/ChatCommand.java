@@ -2,18 +2,18 @@ package domain;
 
 public class ChatCommand extends Message {
 
-    private String command;
     private String[] params;
+    private CommandType ctype;
 
-    public ChatCommand(String command) {
+    public ChatCommand(CommandType ctype) {
         super.type = MessageType.COMMAND;
-        this.command = command;
+        this.ctype = ctype;
         this.params = null;
     }
 
-    public ChatCommand(String command, String[] params) {
-        super.type = MessageType.REQUEST;
-        this.command = command;
+    public ChatCommand(CommandType ctype, String[] params) {
+        super.type = MessageType.COMMAND;
+        this.ctype = ctype;
         this.params = params;
     }
 

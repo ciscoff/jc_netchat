@@ -1,10 +1,7 @@
 package network.Server;
 
 import database.JdbcInteractor;
-import domain.ChatAuthRequest;
-import domain.ChatAuthResponse;
-import domain.Message;
-import domain.MessageType;
+import domain.*;
 import network.ChatUtilizer;
 import utils.AuthResult;
 
@@ -55,9 +52,11 @@ public class ClientHandler implements ChatUtilizer {
                             server.subscribe(ClientHandler.this);
                             blacklist = ji.getBlackList(nickname);
                             // Отправить новому клиенту историю чата
-                            server.sendHistory(ClientHandler.this, ji.getHistory(ClientHandler.this.nickname));
+                            //server.sendHistory(ClientHandler.this, ji.getHistory(ClientHandler.this.nickname));
                             // Известить всех о новом клиенте
-                            server.broadcastMessage(ClientHandler.this, addMetaData(" joined to chat"));
+                            server.broadcastMessage(ClientHandler.this,
+                                    new ChatMessageServer(MessageType.BROADCAST_SERVER, nickname + " joined to chat",
+                                            color, nickname, null));
                             conversationLoop();
                         }
                     } catch (IOException e) {
@@ -138,49 +137,66 @@ public class ClientHandler implements ChatUtilizer {
     // Цикл обработки сообщений
     @Override
     public void conversationLoop() throws IOException {
-        String message = null;
+        Message message = null;
 
-        while ((message = is.readUTF()) != null) {
-            if (message.startsWith(PROT_CMD_PREFIX)) {
-                commandProcessor(message);
-            } else {
-                server.broadcastMessage(this, addMetaData(message));
-                System.out.print("[" + currentTime() + ": " + nickname + "]: " + message + System.lineSeparator());
+        try {
+            while ((message = (Message) ois.readObject()) != null) {
+
+                switch (message.type) {
+                    case COMMAND:
+                    case NOTIFY:
+                        commandProcessor(message);
+                        break;
+                    case BROADCAST_CLIENT:
+                        server.broadcastMessage(this, mapMessage((ChatMessageClient) message));
+                        break;
+                    case UNICAST_CLIENT:
+                        break;
+
+                }
+
+//                if (message.startsWith(PROT_CMD_PREFIX)) {
+//                    commandProcessor(message);
+//                } else {
+//                    server.broadcastMessage(this, addMetaData(message));
+//                    System.out.print("[" + currentTime() + ": " + nickname + "]: " + message + System.lineSeparator());
+//                }
             }
-        }
+        } catch (ClassNotFoundException e) {e.printStackTrace();}
     }
 
     // Обработка комманд
     @Override
-    public void commandProcessor(String command) throws IOException {
-        if (command.startsWith(PROT_MSG_TO) /* /w@@nick@@message */) {
-            String[] parts = command.split(SEPARATOR, 3);
-            server.sendTo(this, parts[1], addMetaData(parts[2]));
-            sendMessage(addMetaData(parts[2]));
-        } else if (command.equals(PROT_MSG_END /* /end */)) {
-            server.broadcastMessage(this, addMetaData(" has left the chat"));
-            /**
-             * Нужно добавить код отключения коннекта
-             */
-        } else if (command.startsWith(PROT_MSG_BLOCK)) {  /* "/block nickBl1 nickBl2 ..." */
-            List<String> ll = new LinkedList<>(Arrays.asList(command.split("\\s")));
-            ll.remove(0);                           /* remove "/block" */
-            // Нельзя добавлять свой ник в черный список
-            if(ll.contains(nickname)) ((LinkedList<String>) ll).remove(nickname);
-            // Обновить кеш blacklist
-            for(String s : ll){ blacklist.add(s);}
-            // Обновить sqlite blacklist
-            ji.addToBlackList(nickname, new TreeSet<>(ll));
-        } else if (command.startsWith(PROT_MSG_SHOW_BL)) {   /* /showbl */
-            ji.getBlackList(nickname).forEach((s) -> System.out.println(s));
-        } else if(command.startsWith(PROT_MSG_UNBLOCK)) {
-            List<String> ll = new LinkedList<>(Arrays.asList(command.split("\\s")));
-            ll.remove(0);                           /* remove "/block" */
-            // Обновить кеш blacklist
-            for(String s : ll){ blacklist.remove(s);}
-            // Обновить sqlite blacklist
-            ji.removeFromBlackList(nickname, new TreeSet<>(ll));
-        }
+    public void commandProcessor(Message message) throws IOException {
+
+//        if (command.startsWith(PROT_MSG_TO) /* /w@@nick@@message */) {
+//            String[] parts = command.split(SEPARATOR, 3);
+//            server.sendTo(this, parts[1], addMetaData(parts[2]));
+//            sendMessage(addMetaData(parts[2]));
+//        } else if (command.equals(PROT_MSG_END /* /end */)) {
+//            server.broadcastMessage(this, addMetaData(" has left the chat"));
+//            /**
+//             * Нужно добавить код отключения коннекта
+//             */
+//        } else if (command.startsWith(PROT_MSG_BLOCK)) {  /* "/block nickBl1 nickBl2 ..." */
+//            List<String> ll = new LinkedList<>(Arrays.asList(command.split("\\s")));
+//            ll.remove(0);                           /* remove "/block" */
+//            // Нельзя добавлять свой ник в черный список
+//            if(ll.contains(nickname)) ((LinkedList<String>) ll).remove(nickname);
+//            // Обновить кеш blacklist
+//            for(String s : ll){ blacklist.add(s);}
+//            // Обновить sqlite blacklist
+//            ji.addToBlackList(nickname, new TreeSet<>(ll));
+//        } else if (command.startsWith(PROT_MSG_SHOW_BL)) {   /* /showbl */
+//            ji.getBlackList(nickname).forEach((s) -> System.out.println(s));
+//        } else if(command.startsWith(PROT_MSG_UNBLOCK)) {
+//            List<String> ll = new LinkedList<>(Arrays.asList(command.split("\\s")));
+//            ll.remove(0);                           /* remove "/block" */
+//            // Обновить кеш blacklist
+//            for(String s : ll){ blacklist.remove(s);}
+//            // Обновить sqlite blacklist
+//            ji.removeFromBlackList(nickname, new TreeSet<>(ll));
+//        }
     }
 
     // Закрыть сокет при простое
@@ -188,7 +204,7 @@ public class ClientHandler implements ChatUtilizer {
         boolean b = false;
         if (nickname == null) {
             if (msecToSec(System.currentTimeMillis() - startTime) > IDLE_TIMEOUT) {
-                sendMessage(PROT_MSG_IDLE + SEPARATOR + "Server Connection Timeout");
+                sendMessage(new ChatNotify(NotifyType.IDLE, "Server Connection Timeout"));
                 closeResources(is, os, socket);
                 b = true;
             }
@@ -240,5 +256,19 @@ public class ClientHandler implements ChatUtilizer {
         return this.hashCode();
     }
 
+    /**
+     *  Смапить клиентское сообщение в формат серверного сообщения
+     */
+    private ChatMessageServer mapMessage(ChatMessageClient cmc) {
 
+        ChatMessageServer cms = new ChatMessageServer(
+                cmc.type == MessageType.UNICAST_CLIENT ? MessageType.UNICAST_SERVER : MessageType.BROADCAST_SERVER,
+                cmc.getMessage(),
+                color,
+                nickname,
+                cmc.getTo()
+        );
+
+        return cms;
+    }
 }

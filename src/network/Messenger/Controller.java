@@ -259,32 +259,25 @@ public class Controller implements Initializable, ChatUtilizer {
                         break;
                     case COMMAND:
                     case NOTIFY:
-//                        commandProcessor(message);
+                        commandProcessor(message);
                         break;
                 }
-
             }
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
-
-
     }
 
-}
-
     @Override
-    public void commandProcessor(String command) throws IOException {
+    public void commandProcessor(Message message) throws IOException {
 
-        String[] parts = command.split(SEPARATOR);
-
-        switch (parts[PROT_CMD_IDX]) {
-            case PROT_MSG_SERVER_CLOSED:
-                break;
-            case PROT_MSG_IDLE:
+        java.util.function.Consumer<Message> execNotify = (m) -> {
+            ChatNotify cn = (ChatNotify)m;
+            switch (cn.getNtype()) {
+                case IDLE:
                 Platform.runLater(() -> {
                     imageConnect.setImage(new Image("/img/disconnect.png"));
-                    lblAuthError.setText(parts[1]);
+                    lblAuthError.setText(cn.getMessage());
                     lblAuthError.setPadding(new Insets(5));
                     lblAuthError.setStyle("-fx-text-fill: red;" +
                             "-fx-border-width: 2;" +
@@ -294,6 +287,23 @@ public class Controller implements Initializable, ChatUtilizer {
                             "-fx-background-radius: 5;");
                     lblAuthError.setVisible(true);
                 });
+                    break;
+                case END:
+                case EXIT:
+                    break;
+            }
+        };
+
+        java.util.function.Consumer<Message> execCommand = (m) -> {
+            return;
+        };
+
+        switch (message.type) {
+            case COMMAND:
+                execCommand.accept(message);
+                break;
+            case NOTIFY:
+                execNotify.accept(message);
                 break;
         }
     }
@@ -304,23 +314,22 @@ public class Controller implements Initializable, ChatUtilizer {
     private Message getClassified(String raw) {
         // Простое сообщение
         if (!raw.startsWith(PROT_CMD_PREFIX))
-            return new ChatMessageClient(MessageType.BROADCAST, raw, nickname, new String(""));
+            return new ChatMessageClient(MessageType.BROADCAST_CLIENT, raw, nickname, new String(""));
 
         Message message = null;
-
         String[] parts = raw.split("\\s", 2);
 
         // Сообщения с префиксами, например /to nickX Hello all !
         switch (parts[0]) {
             case PROT_MSG_TO:       // nickX Hello all !
                 parts = parts[1].split("\\s", 2);
-                message = new ChatMessageClient(MessageType.UNICAST, parts[1], nickname, parts[0]);
+                message = new ChatMessageClient(MessageType.UNICAST_CLIENT, parts[1], nickname, parts[0]);
                 break;
             case PROT_MSG_BLOCK:    // nick1 nick2
-                message = new ChatNotify(NotifyType.BLOCK, parts[1]);
+                message = new ChatCommand(CommandType.BLOCK, parts[1].split("\\s"));
                 break;
             case PROT_MSG_UNBLOCK:  // nick1 nick2
-                message = new ChatNotify(NotifyType.UNBLOCK, parts[1]);
+                message = new ChatCommand(CommandType.UNBLOCK, parts[1].split("\\s"));
                 break;
         }
 

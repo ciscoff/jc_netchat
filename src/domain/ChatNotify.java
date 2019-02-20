@@ -15,8 +15,11 @@ public class ChatNotify extends Message {
     public String getMessage() {
         return message;
     }
-
     public long getTime() {
         return time;
+    }
+
+    public NotifyType getNtype() {
+        return ntype;
     }
 }
