@@ -37,13 +37,13 @@ import static utils.Share.*;
 
 public class Controller implements Initializable, ChatUtilizer {
 
-    boolean isAuthorized;
     DataOutputStream out;
     DataInputStream in;
     ObjectOutputStream oos = null;
     ObjectInputStream ois = null;
-    Socket socket;
+    boolean isAuthorized = false;
     String nickname;
+    Socket socket;
 
     @FXML
     VBox mainFrame;
@@ -127,7 +127,7 @@ public class Controller implements Initializable, ChatUtilizer {
         if (socket == null || socket.isClosed()) connect();
 
         p("tryToAuth");
-//        sendMessage(new ChatAuthRequest(loginField.getText(), passwordField.getText()));
+        sendMessage(new ChatAuthRequest(loginField.getText(), passwordField.getText()));
 
         /**
          * Нужно добавить обработку ситуации отправки пустой формы !!!
@@ -143,13 +143,8 @@ public class Controller implements Initializable, ChatUtilizer {
      * TODO: Подключение к серверу, аутентификация, работа в чате
      */
     private void connect() {
-        p("connect");
         try {
             socket = new Socket(HOST, PORT);
-            p("connect: connected");
-//            in = new DataInputStream(socket.getInputStream());
-//            out = new DataOutputStream(socket.getOutputStream());
-
             oos = new ObjectOutputStream(socket.getOutputStream());
             ois = new ObjectInputStream(socket.getInputStream());
 
@@ -164,9 +159,9 @@ public class Controller implements Initializable, ChatUtilizer {
                         // Цикл работы в чате
                         conversationLoop();
                     } catch (IOException e) {
-                        System.out.println("Connection closed");
+                        p("Connection closed");
                     } finally {
-                        closeResources(in, out, socket);
+                        closeResources(ois, oos, socket);
                     }
                 }
             });
@@ -200,11 +195,9 @@ public class Controller implements Initializable, ChatUtilizer {
     // Цикл аутентификации
     @Override
     public String authenticationLoop() throws IOException {
-        p("authenticationLoop");
-        boolean authorized = false;
         String nickname = null;
 
-        while (!authorized) {
+        while (!isAuthorized) {
             try {
                 Message message = (Message) ois.readObject();
                 if (message.type == MessageType.AUTH_RESPONSE) {
@@ -212,8 +205,7 @@ public class Controller implements Initializable, ChatUtilizer {
                         case AUTH_OK:
                             imageConnect.setImage(new Image("/img/connected.png"));
                             nickname = ((ChatAuthResponse) message).getNick();
-                            authorized = true;
-                            setAuthorized(authorized);
+                            setAuthorized(true);
                             break;
                         case AUTH_ERROR:
                         case NICK_BUSSY:
@@ -240,63 +232,46 @@ public class Controller implements Initializable, ChatUtilizer {
         }
 
         return nickname;
-
-
-//            String reply = in.readUTF();
-//
-//            if (reply.startsWith(PROT_MSG_AUTH_OK)) {
-//                imageConnect.setImage(new Image("/img/connected.png"));
-//                String[] parts = reply.split(SEPARATOR);
-//                nickname = parts[PROT_MY_NICK];
-//                setAuthorized(true);
-//                break;
-//            } else if (reply.startsWith(PROT_CMD_PREFIX)) {
-//                commandProcessor(reply);
-//            } else {
-//                Platform.runLater(() -> {
-//                            lblAuthError.setText(reply);
-//                            lblAuthError.setPadding(new Insets(5));
-//                            lblAuthError.setStyle("-fx-text-fill: #828282;" +
-//                                    "-fx-border-width: 2;" +
-//                                    "-fx-border-radius: 5;" +
-//                                    "-fx-border-color: white;" +
-//                                    "-fx-background-radius: 0;" +
-//                                    "-fx-background-radius: 5;");
-//                            lblAuthError.setVisible(true);
-//                            shakeFrame();
-//                        }
-//                );
-//            }
-//        }
-
-
     }
 
     // Цикл работы в чате
     @Override
     public void conversationLoop() throws IOException {
 
-        while (true) {
-            String message = in.readUTF();
+        try {
+            while (true) {
+                Message message = (Message) ois.readObject();
 
-            if (message.startsWith(PROT_CMD_PREFIX)) {
-                commandProcessor(message);
-            } else {
-                String[] parts = message.split(SEPARATOR, 3);
+                switch (message.type) {
+                    case BROADCAST_SERVER:
+                    case UNICAST_SERVER:
+                        Platform.runLater(() -> {
+                            /**
+                             * equals проверяет имя отправителя с именем текущего клиента.
+                             * Если имена совпадают, то вернулось свое собственное сообщение и его
+                             * нужно отобразить с одной стороны окна чата. Если различаются, то сообщение
+                             * чужое и его нужно поместить с другой стороны.
+                             */
+                            ChatMessageServer cms = (ChatMessageServer)message;
+                            stickMessage(cms.getFrom().equals(nickname), cms.getColor(), cms.getFrom(), cms.getMessage());
+                        });
 
-                // "Not on FX application thread"
-                Platform.runLater(() -> {
-                    /**
-                     * equals проверяет имя отправителя с именем текущего клиента.
-                     * Если имена совпадают, то вернулось свое собственное сообщение и его
-                     * нужно отобразить с одной стороны окна чата, если различаются, то сообщение
-                     * чужое и его нужно поместить с другой стороны
-                     */
-                    stickMessage(parts[PROT_NICK_FROM].equals(nickname), parts[PROT_COLOR], parts[PROT_NICK_FROM], parts[PROT_MSG_BODY]);
-                });
+                        break;
+                    case COMMAND:
+                    case NOTIFY:
+//                        commandProcessor(message);
+                        break;
+                }
+
             }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
         }
+
+
     }
+
+}
 
     @Override
     public void commandProcessor(String command) throws IOException {
@@ -324,22 +299,22 @@ public class Controller implements Initializable, ChatUtilizer {
     }
 
     /**
-     *  Классифицировать введенное сообщение и упаковать его в соотв инстанс
+     * Классифицировать введенное сообщение и упаковать его в соотв инстанс
      */
     private Message getClassified(String raw) {
         // Простое сообщение
-        if(!raw.startsWith(PROT_CMD_PREFIX))
-            return new ChatMessageClient(MessageType.BROADCAST, raw, nickname, Optional.empty());
+        if (!raw.startsWith(PROT_CMD_PREFIX))
+            return new ChatMessageClient(MessageType.BROADCAST, raw, nickname, new String(""));
 
         Message message = null;
 
         String[] parts = raw.split("\\s", 2);
 
         // Сообщения с префиксами, например /to nickX Hello all !
-        switch(parts[0]) {
+        switch (parts[0]) {
             case PROT_MSG_TO:       // nickX Hello all !
                 parts = parts[1].split("\\s", 2);
-                message = new ChatMessageClient(MessageType.UNICAST, parts[1], nickname, Optional.of(parts[0]));
+                message = new ChatMessageClient(MessageType.UNICAST, parts[1], nickname, parts[0]);
                 break;
             case PROT_MSG_BLOCK:    // nick1 nick2
                 message = new ChatNotify(NotifyType.BLOCK, parts[1]);

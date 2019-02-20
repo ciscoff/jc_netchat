@@ -97,8 +97,11 @@ public class Share {
         return Math.abs(msec / 1000);
     }
 
-
     public static void p(String s) {
         System.out.println(s);
+    }
+
+    public static String optional() {
+        return new String("");
     }
 }

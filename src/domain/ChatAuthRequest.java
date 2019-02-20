@@ -1,5 +1,10 @@
 package domain;
 
+/**
+ * Отправляется клиентом в сторону сервера
+ * CLIENT -> SERVER
+ */
+
 public class ChatAuthRequest extends Message{
     private final long time;
     private final String login;

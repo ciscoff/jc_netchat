@@ -1,5 +1,11 @@
 package domain;
 
+/**
+ * Отправляется сервером в сторону клиента
+ * SERVER -> CLIENT
+ */
+
+
 import utils.AuthResult;
 
 import java.util.Optional;
@@ -9,9 +15,9 @@ public class ChatAuthResponse extends Message {
     private final int sessionId;
     private final long time;
     private final String nick;
-    private final Optional<String> message;
+    private final String message;
 
-    public ChatAuthResponse(AuthResult response, int sessionId, String nick, Optional<String> message) {
+    public ChatAuthResponse(AuthResult response, int sessionId, String nick, String message) {
         super.type = MessageType.AUTH_RESPONSE;
         this.time = System.currentTimeMillis();
         this.response = response;
@@ -37,6 +43,6 @@ public class ChatAuthResponse extends Message {
     }
 
     public String getMessage() {
-        return message.orElse("");
+        return message;
     }
 }

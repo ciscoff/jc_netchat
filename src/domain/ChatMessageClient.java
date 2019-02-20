@@ -5,10 +5,11 @@ import java.util.Optional;
 public class ChatMessageClient extends Message {
     private final String message;
     private final String from;
-    private final Optional<String> to;
+    private final String to;
     private final long time;
 
-    public ChatMessageClient(MessageType type, String message, String from, Optional<String> to) {
+    public ChatMessageClient(MessageType type, String message, String from, String to) {
+        super.type = type;
         this.message = message;
         this.from = from;
         this.to = to;
@@ -24,7 +25,7 @@ public class ChatMessageClient extends Message {
     }
 
     public String getTo() {
-        return to.orElse("");
+        return to;
     }
 
     public long getTime() {

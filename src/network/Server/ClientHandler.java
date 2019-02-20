@@ -85,7 +85,6 @@ public class ClientHandler implements ChatUtilizer {
 
         p("authenticationLoop");
 
-
         while ((message = (Message)ois.readObject()) != null) {
 
             p("authenticationLoop " + message.type);
@@ -94,16 +93,17 @@ public class ClientHandler implements ChatUtilizer {
                 case AUTH_REQUEST:
                     ChatAuthRequest request = (ChatAuthRequest)message;
                     nick = ji.getNickByLoginPass(request.getLogin(), request.getPassword());
+                    p("authenticationLoop: " + request.getLogin() + ":" + request.getPassword());
                     if (nick != null) {
                         if (!server.isNickBusy(nick)) {
                             // Сообщить об успешной аутентификации и отправить nickname
-                            sendMessage(new ChatAuthResponse(AuthResult.AUTH_OK, getSessionId(), nick, Optional.empty()));
+                            sendMessage(new ChatAuthResponse(AuthResult.AUTH_OK, getSessionId(), nick, optional()));
                             break;
                         } else {
-                            sendMessage(new ChatAuthResponse(AuthResult.NICK_BUSSY, 0, null, Optional.of("Nick is bussy")));
+                            sendMessage(new ChatAuthResponse(AuthResult.NICK_BUSSY, 0, null, PROT_MSG_AUTH_NICK_BUSSY));
                         }
                     } else {
-                        sendMessage(new ChatAuthResponse(AuthResult.AUTH_ERROR, 0, nick, Optional.of("Login or password incorrest")));
+                        sendMessage(new ChatAuthResponse(AuthResult.AUTH_ERROR, 0, nick, PROT_MSG_AUTH_ERROR));
                     }
                     break;
             }

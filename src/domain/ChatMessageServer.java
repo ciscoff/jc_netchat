@@ -7,8 +7,8 @@ public class ChatMessageServer extends Message {
     private final String to;
     private final long time;
 
-    public ChatMessageServer(String message, String color, String from, String to) {
-        super.type = MessageType.UNICAST;
+    public ChatMessageServer(MessageType type, String message, String color, String from, String to) {
+        super.type = type;
         this.message = message;
         this.color = color;
         this.from = from;
