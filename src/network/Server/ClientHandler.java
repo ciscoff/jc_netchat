@@ -34,8 +34,6 @@ public class ClientHandler implements ChatUtilizer {
             this.server = server;
             this.socket = socket;
             this.ji = ji;
-//            this.is = new DataInputStream(socket.getInputStream());
-//            this.os = new DataOutputStream(socket.getOutputStream());
             this.ois = new ObjectInputStream(socket.getInputStream());
             this.oos = new ObjectOutputStream(socket.getOutputStream());
             this.startTime = System.currentTimeMillis();
@@ -48,11 +46,14 @@ public class ClientHandler implements ChatUtilizer {
 
                         // Цикл аутентификации
                         if ((ClientHandler.this.nickname = authenticationLoop()) != null) {
+                            p(ClientHandler.this.nickname);
                             ClientHandler.this.color = server.assignColor();
                             server.subscribe(ClientHandler.this);
-                            blacklist = ji.getBlackList(nickname);
+                            //blacklist = ji.getBlackList(nickname);
+
                             // Отправить новому клиенту историю чата
                             //server.sendHistory(ClientHandler.this, ji.getHistory(ClientHandler.this.nickname));
+
                             // Известить всех о новом клиенте
                             server.broadcastMessage(ClientHandler.this,
                                     new ChatMessageServer(MessageType.BROADCAST_SERVER, nickname + " joined to chat",
@@ -82,22 +83,19 @@ public class ClientHandler implements ChatUtilizer {
         String nick = null;
         Message message;
 
-        p("authenticationLoop");
-
         while ((message = (Message)ois.readObject()) != null) {
-
-            p("authenticationLoop " + message.type);
 
             switch(message.type){
                 case AUTH_REQUEST:
                     ChatAuthRequest request = (ChatAuthRequest)message;
                     nick = ji.getNickByLoginPass(request.getLogin(), request.getPassword());
-                    p("authenticationLoop: " + request.getLogin() + ":" + request.getPassword());
+                    p("authenticationLoop: " + nick + ":" + request.getLogin() + ":" + request.getPassword());
                     if (nick != null) {
-                        if (!server.isNickBusy(nick)) {
-                            // Сообщить об успешной аутентификации и отправить nickname
+                        if (server.nickNotBussy(nick)) {
+                            // Сообщить клиенту об успешной аутентификации и отправить nickname
                             sendMessage(new ChatAuthResponse(AuthResult.AUTH_OK, getSessionId(), nick, optional()));
-                            break;
+                            // Выход из цикла и метода
+                            return nick;
                         } else {
                             sendMessage(new ChatAuthResponse(AuthResult.NICK_BUSSY, 0, null, PROT_MSG_AUTH_NICK_BUSSY));
                         }

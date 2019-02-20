@@ -80,10 +80,14 @@ public class ChatServer implements Cleaner {
     public synchronized void broadcastMessage(ClientHandler sender, ChatMessageServer message) {
         inHistory = false;
 
+        p("broadcastMessage");
         clients.entrySet().forEach((e) -> {
 
             // Отправить можно только авторизованному клиенту
-            if(e.getKey().startsWith(SOCKET_PREFIX)) return;
+            if(e.getKey().startsWith(SOCKET_PREFIX)) {
+                p(e.getKey());
+                return;
+            }
 
             // Поместить сообщение в историю
 //            if(!inHistory) {
@@ -95,10 +99,12 @@ public class ChatServer implements Cleaner {
 //                }
 //            }
 
+            e.getValue().sendMessage(message);
+
             // Проверить черный список и отправить
-            if (allowedToSend(sender, e.getValue())) {
-                e.getValue().sendMessage(message);
-            }
+//            if (allowedToSend(sender, e.getValue())) {
+//                e.getValue().sendMessage(message);
+//            }
         });
     }
 
@@ -137,17 +143,17 @@ public class ChatServer implements Cleaner {
         return true;
     }
 
-    public synchronized boolean isNickBusy(String nickname) {
-        return clients.get(nickname) != null;
+    public synchronized boolean nickNotBussy(String nickname) {
+        return clients.get(nickname) == null;
     }
 
     public synchronized void subscribe(ClientHandler ch) {
         String nick = ch.getNickname();
-        if (nick != null) {
+        if (nick == null) { // Клиент ещё не аутентифицирован и не имеет nick'а
+            clients.put(ch.getConnectId(), ch);
+        } else {            // Клиент аутентифицирован и получил nick
             clients.remove(ch.getConnectId());
             clients.put(nick, ch);
-        } else {
-            clients.put(ch.getConnectId(), ch);
         }
     }
 
