@@ -105,8 +105,7 @@ public class Controller implements Initializable, ChatUtilizer {
      */
     @FXML
     public void onMessage() {
-        p("onMessage");
-        //sendMessage(getClassified(messageField.getText()));
+        sendMessage(getClassified(messageField.getText()));
         messageField.clear();
         messageField.requestFocus();
     }
@@ -126,7 +125,6 @@ public class Controller implements Initializable, ChatUtilizer {
     public void tryToAuth() {
         if (socket == null || socket.isClosed()) connect();
 
-        p("tryToAuth");
         sendMessage(new ChatAuthRequest(loginField.getText(), passwordField.getText()));
 
         /**
@@ -137,7 +135,6 @@ public class Controller implements Initializable, ChatUtilizer {
         loginField.clear();
         passwordField.clear();
     }
-
 
     /**
      * TODO: Подключение к серверу, аутентификация, работа в чате
@@ -173,26 +170,9 @@ public class Controller implements Initializable, ChatUtilizer {
         }
     }
 
-
-//    public void tryToAuth() {
-//        if (socket == null || socket.isClosed()) connect();
-//
-//        try {
-//            out.writeUTF(PROT_MSG_AUTH + " " + loginField.getText() + " " + passwordField.getText());
-//
-//            /**
-//             * Нужно добавить обработку ситуации отправки пустой формы !!!
-//             */
-//
-//            lblAuthError.setVisible(false);
-//            loginField.clear();
-//            passwordField.clear();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
-
-    // Цикл аутентификации
+    /**
+     * TODO: Цикл аутентификации
+     */
     @Override
     public String authenticationLoop() throws IOException {
         String nickname = null;
@@ -207,8 +187,8 @@ public class Controller implements Initializable, ChatUtilizer {
                             nickname = ((ChatAuthResponse) message).getNick();
                             setAuthorized(true);
                             break;
-                        case AUTH_ERROR:
                         case NICK_BUSSY:
+                        case AUTH_ERROR:
                             Platform.runLater(() -> {
                                         lblAuthError.setText(((ChatAuthResponse) message).getMessage());
                                         lblAuthError.setPadding(new Insets(5));
@@ -224,17 +204,19 @@ public class Controller implements Initializable, ChatUtilizer {
                             );
                             break;
                     }
+                } else if (message.type == MessageType.COMMAND | message.type == MessageType.NOTIFY) {
+                    commandProcessor(message);
                 }
-
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }
-
         return nickname;
     }
 
-    // Цикл работы в чате
+    /**
+     * TODO: Цикл работы в чате
+     */
     @Override
     public void conversationLoop() throws IOException {
 
@@ -271,6 +253,7 @@ public class Controller implements Initializable, ChatUtilizer {
     @Override
     public void commandProcessor(Message message) throws IOException {
 
+        // Обработчик Notify
         java.util.function.Consumer<Message> execNotify = (m) -> {
             ChatNotify cn = (ChatNotify)m;
             switch (cn.getNtype()) {
@@ -294,10 +277,12 @@ public class Controller implements Initializable, ChatUtilizer {
             }
         };
 
+        // Обработчик Command
         java.util.function.Consumer<Message> execCommand = (m) -> {
             return;
         };
 
+        // Диспетчер команд и нотификаций
         switch (message.type) {
             case COMMAND:
                 execCommand.accept(message);
@@ -324,6 +309,7 @@ public class Controller implements Initializable, ChatUtilizer {
             case PROT_MSG_TO:       // nickX Hello all !
                 parts = parts[1].split("\\s", 2);
                 message = new ChatMessageClient(MessageType.UNICAST_CLIENT, parts[1], nickname, parts[0]);
+                p("getClassified: " + parts[1] +":"+ nickname +":"+ parts[0]);
                 break;
             case PROT_MSG_BLOCK:    // nick1 nick2
                 message = new ChatCommand(CommandType.BLOCK, parts[1].split("\\s"));
@@ -335,27 +321,6 @@ public class Controller implements Initializable, ChatUtilizer {
 
         return message;
     }
-
-    /**
-     * Превратить строку вида:
-     * /cmd nickTo Hello world !
-     * в отформатированную строку вида:
-     * /cmd@@nickTo@@Hello world !
-     */
-//    private String formatRaw(String raw) {
-//        String[] parts = raw.split("\\s", 3);
-//        String message = null;
-//
-//        switch (parts[0]) {
-//            case PROT_MSG_TO:   // /w nick_to message text
-//                message = parts[PROT_CMD_IDX] + SEPARATOR + parts[PROT_NICK_TO] + SEPARATOR + parts[PROT_MSG_BODY];
-//                break;
-//            default:
-//                message = raw;
-//        }
-//        return message;
-//    }
-
 
     /**
      * Отобразить сообщение
@@ -435,7 +400,7 @@ public class Controller implements Initializable, ChatUtilizer {
     }
 
     // Включение/Отключение панелей окна
-    private void setAuthorized(boolean isAuthorized) {
+    private void    setAuthorized(boolean isAuthorized) {
         this.isAuthorized = isAuthorized;
         authPanel.setVisible(!isAuthorized);
         authPanel.setManaged(!isAuthorized);
