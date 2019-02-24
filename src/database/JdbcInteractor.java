@@ -1,5 +1,12 @@
 package database;
 
+import domain.ChatMessageServer;
+import domain.Message;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -95,6 +102,29 @@ public class JdbcInteractor {
                         "(SELECT B.id FROM users B WHERE B.nickname = '%s'), %s)", sender, receiver, message);
         jc.executeUpdate(query);
     }
+
+    public synchronized void toHistory(ChatMessageServer message) {
+
+        PreparedStatement prepStatement = null;
+
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+
+            oos.writeObject(message);
+            byte[] raw = baos.toByteArray();
+
+            String sql = "INSERT INTO history (sender, receiver, message) VALUES " +
+                    "((SELECT A.id FROM users A where nickname = ?), " +
+                    "(SELECT B.id FROM users B WHERE B.nickname = ?), ?)";
+
+            jc.updateHistory(sql, message.getFrom(), message.getTo() == null ? "" : message.getTo(), raw);
+
+        } catch (IOException e) {e.printStackTrace();}
+
+    }
+
+
 
     // Получить историю чата
     public synchronized HistoryEntry[] getHistory() {

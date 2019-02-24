@@ -1,5 +1,6 @@
 package database;
 
+import java.io.ByteArrayInputStream;
 import java.sql.*;
 
 import static utils.Share.JDBC_CLASS_NAME;
@@ -53,6 +54,23 @@ public class JdbcController {
         try {
             statement.executeUpdate(sql);
         } catch (SQLException e) {e.printStackTrace();}
+    }
+
+    public synchronized void updateHistory(String sql, String sender, String receiver, byte[] message) {
+
+        PreparedStatement prepStatement = null;
+
+        try {
+            prepStatement = connection.prepareStatement(sql);
+
+            ByteArrayInputStream bais = new ByteArrayInputStream(message);
+            prepStatement.setString(1, sender);
+            prepStatement.setString(2, receiver);
+            prepStatement.setBinaryStream(3, bais, message.length);
+            prepStatement.executeUpdate();
+
+        } catch (SQLException e) {e.printStackTrace();}
+
     }
 
 }

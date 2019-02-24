@@ -101,6 +101,7 @@ public class ChatServer implements Cleaner {
 //                }
 //            }
 
+            ji.toHistory(message);
             e.getValue().sendMessage(message);
 
             // Проверить черный список и отправить
