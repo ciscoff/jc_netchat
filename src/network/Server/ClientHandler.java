@@ -149,6 +149,7 @@ public class ClientHandler implements ChatUtilizer {
                         server.broadcastMessage(this, mapMessage((ChatMessageClient) message));
                         break;
                     case UNICAST_CLIENT:
+                        server.sendTo(this, mapMessage((ChatMessageClient) message));
                         break;
 
                 }

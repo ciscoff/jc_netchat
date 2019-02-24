@@ -2,7 +2,10 @@ package network.Server;
 
 import database.HistoryEntry;
 import database.JdbcInteractor;
+import domain.ChatMessageClient;
 import domain.ChatMessageServer;
+import domain.Message;
+import domain.MessageType;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -80,7 +83,6 @@ public class ChatServer implements Cleaner {
     public synchronized void broadcastMessage(ClientHandler sender, ChatMessageServer message) {
         inHistory = false;
 
-        p("broadcastMessage");
         clients.entrySet().forEach((e) -> {
 
             // Отправить можно только авторизованному клиенту
@@ -109,20 +111,46 @@ public class ChatServer implements Cleaner {
     }
 
     // Отправить конкретному получателю
-    public synchronized void sendTo(ClientHandler from, String nickTo, String message) {
-        ClientHandler chTo = clients.get(nickTo);
+//    public synchronized void sendTo(ClientHandler from, String nickTo, String message) {
+//        ClientHandler chTo = clients.get(nickTo);
+//
+//        // Получатель существует ?
+//        if(chTo == null) return;
+//
+//        // Не сохраняем служебные сообщения
+//        if(!message.startsWith(PROT_CMD_PREFIX)) {
+//            ji.toHistory(from.getNickname(), nickTo, "'" + message + "'");
+//        }
+//
+//        // Проверка черного списка
+//        if(allowedToSend(from, chTo)) chTo.sendMessage(message);
+//    }
 
-        // Отправительнь существует ?
-        if(chTo == null) return;
+    // Отправить конкретному получателю
+    public synchronized void sendTo(ClientHandler from, Message message) {
 
-        // Не сохраняем служебные сообщения
-        if(!message.startsWith(PROT_CMD_PREFIX)) {
-            ji.toHistory(from.getNickname(), nickTo, "'" + message + "'");
+        ChatMessageServer cms = (ChatMessageServer)message;
+        ClientHandler chTo = clients.get(cms.getTo());
+
+        // Получатель в чате ?
+        if(chTo == null) {
+            p("Client '" + cms.getTo() + "' not exists");
+            return;
         }
 
+        // В историю не должны попадать служебные сообщения
+//        if(message.type == MessageType.BROADCAST_CLIENT || message.type == MessageType.UNICAST_CLIENT) {
+//            ji.toHistory(from.getNickname(), nickTo, "'" + message + "'");
+//        }
+
         // Проверка черного списка
-        if(allowedToSend(from, chTo)) chTo.sendMessage(message);
+//        if(allowedToSend(from, chTo)) chTo.sendMessage(message);
+
+        // Отправить получателю и отправителю
+        chTo.sendMessage(message);
+        from.sendMessage(message);
     }
+
 
     // Отправить историю чата новому клиенту
     public synchronized void sendHistory(ClientHandler newClient, HistoryEntry[] history){

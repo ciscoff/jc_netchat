@@ -307,7 +307,7 @@ public class Controller implements Initializable, ChatUtilizer {
         // Сообщения с префиксами, например /to nickX Hello all !
         switch (parts[0]) {
             case PROT_MSG_TO:       // nickX Hello all !
-                parts = parts[1].split("\\s", 2);
+                parts = parts[1].split("\\s", 2);   // -> nickX; Hello All !
                 message = new ChatMessageClient(MessageType.UNICAST_CLIENT, parts[1], nickname, parts[0]);
                 p("getClassified: " + parts[1] +":"+ nickname +":"+ parts[0]);
                 break;
